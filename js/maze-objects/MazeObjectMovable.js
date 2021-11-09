@@ -5,27 +5,32 @@ class MazeObjectMovable {
     }
 
     move(x,y) {
-        this.canvasContext.save();
-        const image = new Image();
-        image.onload = () => {
-            this.canvasContext.save();
-            this.canvasContext
-            .setTransform(1, 0, 0, 1, x, y);
-            this.canvasContext.rotate(this.radRotation);
-            this.canvasContext.drawImage(
-                image,
-                - x,
-                - y,
-                this.position.width,
-                this.position.height
-                );
-            this.canvasContext.restore();
-        };
-        image.src = this.src;
+        console.log(this.position.point.x, this.position.point.y, this.position.width, this.position.height);
+        this.canvasContext.setTransform(1,0,0,1,0,0); // reset transform
+        this,this.canvasContext.fillStyle = '#000';
+        this.canvasContext.fillRect(100, 0, 512, 512); 
+    
+        // this.canvasContext.save();
+        // const image = new Image();
+        // image.onload = () => {
+        //     this.canvasContext.save();
+        //     this.canvasContext
+        //     .setTransform(1, 0, 0, 1, x, y);
+        //     this.canvasContext.rotate(this.radRotation);
+        //     this.canvasContext.drawImage(
+        //         image,
+        //         - x,
+        //         - y,
+        //         this.position.width,
+        //         this.position.height
+        //         );
+        //     this.canvasContext.restore();
+        // };
+        // image.src = this.src;
     }
 
-    initObject() {
-        this.#mazeObject.initObject();
+    async draw() {
+        await this.#mazeObject.draw();
     }
 
     get position() {
@@ -50,6 +55,10 @@ class MazeObjectMovable {
 
     get center() {
         return this.#mazeObject.center;
+    }
+
+    get isRendered() {
+        return this.#mazeObject.isRendered;
     }
 }
 

@@ -7,6 +7,7 @@ class MazeObject {
     #src;
     #canvasContentRef;
     #rotation;
+    #isDrawn;
 
     constructor({ src, position, canvasContext, rotation = 0 }) {
         if (!canvasContext) {
@@ -16,32 +17,41 @@ class MazeObject {
         this.#src = src;
         this.#rotation = rotation;
         this.#canvasContentRef = canvasContext;
-        this.initObject();
+        this.#isDrawn = false;
     } 
 
-    initObject() {
-        this.canvasContext.save();
-        const image = new Image();
-        image.onload = () => {
-            this.#canvasContentRef.save();
-            //  !Important
-            //  setting transform to translate horizontally 
-            //  to current position + (current position / 2) [thus moving  origin to center]
-            //  and on image draw start drawing from the start
-            this.#canvasContentRef
-            .setTransform(1, 0, 0, 1, this.center.x, this.center.y);
-            this.#canvasContentRef.rotate(this.radRotation);
-            this.#canvasContentRef.drawImage(
-                image,
-                - this.halfSize.x,
-                - this.halfSize.y,
-                this.#position.width,
-                this.#position.height
-                );
-            this.#canvasContentRef.restore();
-        };
-        image.src = this.#src;
+    async draw() {
+        return new Promise((resolve, reject) => {
+            this.canvasContext.save();
+            const image = new Image();
+            image.onload = () => {
+                this.#canvasContentRef.save();
+                //  !Important
+                //  setting transform to translate horizontally 
+                //  to current position + (current position / 2) [thus moving  origin to center]
+                //  and on image draw start drawing from the start
+                this.#canvasContentRef
+                .setTransform(1, 0, 0, 1, this.center.x, this.center.y);
+                this.#canvasContentRef.rotate(this.radRotation);
+                this.#canvasContentRef.drawImage(
+                    image,
+                    - this.halfSize.x,
+                    - this.halfSize.y,
+                    this.#position.width,
+                    this.#position.height
+                    );
+                this.#canvasContentRef.restore();
+                this.#isDrawn = true;
+                resolve();
+            };
+            image.onerror = () => {
+                reject();
+            }
+            image.src = this.#src;
+        });
+        
     }
+
 
     get position() {
         return this.#position;
@@ -64,6 +74,10 @@ class MazeObject {
             (this.#position.width) / 2,
             this.#position.height / 2
         );
+    }
+
+    get isRendered() {
+        return this.#isDrawn;
     }
 
     get center() {
