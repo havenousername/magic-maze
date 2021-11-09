@@ -1,9 +1,9 @@
-import { MazeObject } from "./MazeObject";
+import { MazeObject } from "./MazeObject.js";
 
 
 class MazeRoom extends MazeObject {
-    constructor({ src, position, canvasContext }) {
-        super({ src, position, canvasContext });
+    constructor({ src, position, canvasContext, rotation }) {
+        super({ src, position, canvasContext, rotation });
     }
 }
 

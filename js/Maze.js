@@ -1,7 +1,8 @@
 import { Colors } from "./colors.js";
 import { InvalidArgumentException } from "./exceptions/InvalidArgumentException.js";
 import { NullUndefinedValueException } from "./exceptions/NullUndefinedValueException.js";
-import { MazeObject } from "./maze-objects/MazeObject.js";
+import { MazeRoom } from "./maze-objects/MazeRoom.js";
+import { MazeObjectMovable } from "./maze-objects/MazeObjectMovable.js";
 import { Position } from "./util/Position.js";
 
 class Maze {
@@ -15,6 +16,7 @@ class Maze {
     #roomSize;
     #rooms;
     #srcImages;
+    #currentRoom;
 
     constructor(canvasId, srcImages) {
         if (!canvasId) {
@@ -38,23 +40,48 @@ class Maze {
         this.#rooms = Array(Maze.MAZE_SIZE).fill(Array(Maze.MAZE_SIZE).fill(false));
         this.#srcImages = srcImages;
         this.initRooms();
+        this.initCurrentRoom();
     }  
+
+    initCurrentRoom() {
+        const randomImageIndex = this.generateRandomImageIndex();
+        const randomRotation = this.generateRandomRotationIndex();
+
+        this.#currentRoom = new MazeObjectMovable(new MazeRoom({
+            src: this.#srcImages[randomImageIndex],
+            position: new Position(this.#roomSize, this.#roomSize, Maze.SIZE + Maze.OUTER_SIZE, 0),
+            canvasContext: this.#canvasContext,
+            rotation: Maze.ROTATIONS[randomRotation]
+        }));
+    }
+
+    generateRandomImageIndex = () => Math.round(Math.random() * (this.#srcImages.length - 1));
+
+    generateRandomRotationIndex = () => Math.round(Math.random() * (Maze.ROTATIONS.length - 1));
 
     initRooms() {
         this.#rooms = this.#rooms
         .map((roomRow, rowIndex) => roomRow.
             map( (_, roomIndex) => {
-                if ((rowIndex + 1) % 2 === 1 && (roomIndex + 1) % 2 === 1) {
-                    const randomImageIndex = Math.round(Math.random() * (this.#srcImages.length - 1));
-                    const randomRotation = Math.round(Math.random() * (Maze.ROTATIONS.length - 1));
-                    return new MazeObject({
+                const randomImageIndex = this.generateRandomImageIndex();
+                const randomRotation = this.generateRandomRotationIndex();
+
+                const isOnlyOdd = (rowIndex) => (rowIndex + 1) % 2 === 1 && (roomIndex + 1) % 2 === 1;
+
+                if (isOnlyOdd(rowIndex)) {    
+                    return new MazeRoom({
                         src: this.#srcImages[randomImageIndex],
                         position: new Position(this.#roomSize, this.#roomSize, (rowIndex * this.#roomSize) + Maze.OUTER_SIZE, roomIndex * this.#roomSize), 
                         canvasContext: this.#canvasContext,
                         rotation: Maze.ROTATIONS[randomRotation]
                     })
                 }
-                return null;
+                return new MazeObjectMovable(new MazeRoom({
+                    src: this.#srcImages[randomImageIndex],
+                    position: new Position(this.#roomSize, this.#roomSize, (rowIndex * this.#roomSize) + Maze.OUTER_SIZE, roomIndex * this.#roomSize), 
+                    canvasContext: this.#canvasContext,
+                    rotation: Maze.ROTATIONS[randomRotation]
+                }));
             }));
     }
 
