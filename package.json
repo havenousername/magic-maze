@@ -1,0 +1,16 @@
+{
+  "name": "magic_maze",
+  "version": "1.0.0",
+  "description": "Adaptation of well known maze board game, played in four person and done with canvas api",
+  "main": "index.html",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "keywords": [
+    "js",
+    "vanilla",
+    "asignment"
+  ],
+  "author": "Cristea Andrei",
+  "license": "ISC"
+}
