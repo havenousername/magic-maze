@@ -9,6 +9,7 @@ import { ArrowObject } from "./maze-objects/ArrowObject.js";
 import { Direction } from "./constants/direction.js";
 import { AppException } from "./exceptions/AppException.js";
 import { WrongDirectionException } from "./exceptions/WrongDirectionException.js";
+import { ArrayUtility } from "./util/ArrayUtility.js";
 
 class Maze {
     static MAZE_SIZE = 7;
@@ -43,15 +44,21 @@ class Maze {
         ]
     ]; 
 
+    static straightRoom = '../assets/room.svg';
+    static bendRoom = '../assets/bend-room.svg';
+    static tRoom = '../assets/t-room.svg';
+
+    static srcImages = ['../assets/room.svg', '../assets/bend-room.svg', '../assets/t-room.svg'];
+    static images = ArrayUtility.shuffle([...Array(13).fill(Maze.srcImages[0]), ...Array(15).fill(Maze.srcImages[1]), ...Array(6).fill(Maze.srcImages[2])]);
+
     #canvas;
     #canvasContext;
     #roomSize;
     #rooms;
-    #srcImages;
     #currentRoom;
     #arrows;
 
-    constructor(canvasId, srcImages) {
+    constructor(canvasId) {
         if (!canvasId) {
             throw new InvalidArgumentException("canvas id is undefined");
         }
@@ -72,7 +79,6 @@ class Maze {
 
         this.#roomSize = (Maze.SIZE) / Maze.MAZE_SIZE;
         this.#rooms = Array(Maze.MAZE_SIZE).fill(Array(Maze.MAZE_SIZE).fill(false));
-        this.#srcImages = srcImages;
         this.initRooms();
         this.initCurrentRoom();
 
@@ -114,7 +120,7 @@ class Maze {
         const randomRotation = this.generateRandomRotationIndex();
 
         this.#currentRoom = new MazeObjectMovable(new MazeRoom({
-            src: this.#srcImages[randomImageIndex],
+            src: Maze.images[randomImageIndex],
             position: new Position(this.#roomSize, this.#roomSize, Maze.OUTER_SIZE + this.#roomSize * 7 , Maze.OUTER_SIZE + this.#roomSize),
             canvasContext: this.#canvasContext,
             rotation: Maze.ROTATIONS[randomRotation]
@@ -123,7 +129,7 @@ class Maze {
         await this.#currentRoom.draw();
     }
 
-    generateRandomImageIndex = () => Math.round(Math.random() * (this.#srcImages.length - 1));
+    generateRandomImageIndex = () => Math.round(Math.random() * (Maze.images.length - 1));
 
     generateRandomRotationIndex = () => Math.round(Math.random() * (Maze.ROTATIONS.length - 1));
 
@@ -148,7 +154,7 @@ class Maze {
                 if (isOnlyOdd(rowIndex)) {    
                     const mazeProps = Maze.FIXED_ROOMS[ Math.ceil(rowIndex / 2)][Math.ceil(roomIndex / 2)];
                     return new MazeRoom({
-                        src: this.#srcImages[mazeProps.src],
+                        src: Maze.srcImages[mazeProps.src],
                         position: new Position(this.#roomSize, this.#roomSize, (roomIndex * this.#roomSize) + Maze.OUTER_SIZE, (rowIndex * this.#roomSize) + Maze.OUTER_SIZE), 
                         canvasContext: this.#canvasContext,
                         rotation: mazeProps.rotation,
@@ -157,7 +163,7 @@ class Maze {
 
                 
                 return new MazeObjectMovable(new MazeRoom({
-                    src: this.#srcImages[randomImageIndex],
+                    src: Maze.images[randomImageIndex],
                     position: new Position(this.#roomSize, this.#roomSize, (rowIndex * this.#roomSize) + Maze.OUTER_SIZE, (roomIndex * this.#roomSize) + Maze.OUTER_SIZE), 
                     canvasContext: this.#canvasContext,
                     rotation: Maze.ROTATIONS[randomRotation],
@@ -176,7 +182,6 @@ class Maze {
         this.fillSectionBackground(0, 0, this.#canvas.height, this.#canvas.height);
 
         this.#canvasContext.fillStyle  = Colors.BACKGROUND_ORANGE;
-        console.log(this.#canvas.width - 2 * Maze.OUTER_SIZE);
         this.#canvasContext.fillRect(Maze.OUTER_SIZE, Maze.OUTER_SIZE, this.#canvas.width - 2 * Maze.OUTER_SIZE, this.#canvas.height - 2 * Maze.OUTER_SIZE);
     }
 
