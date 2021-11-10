@@ -19,13 +19,11 @@ class ArrowObject extends MazeObjectMovable {
     }
 
     hasIntersectActiveRoom() {
-        // console.log(this.#maze.currentRoom.position.hasInsideX(this.position) || this.#maze.currentRoom.position.hasInsideY(this.position));
         return this.#maze.currentRoom.position.hasInsideX(this.position) || this.#maze.currentRoom.position.hasInsideY(this.position);
     }
 
     isLocatedCloseToActiveRoom() {
         const distance = this.#maze.currentRoom.position.distanceBetween(this.position);
-        // console.log(distance, this.#maze.currentRoom.position, this.#maze.currentRoom.id);
         return distance.x < this.#maze.currentRoom.position.width
         && distance.y < this.#maze.currentRoom.position.height;
     }

@@ -112,7 +112,7 @@ class Maze {
 
         this.#currentRoom = new MazeObjectMovable(new MazeRoom({
             src: this.#srcImages[randomImageIndex],
-            position: new Position(this.#roomSize, this.#roomSize, Maze.OUTER_SIZE + this.#roomSize , Maze.SIZE + Maze.OUTER_SIZE),
+            position: new Position(this.#roomSize, this.#roomSize, Maze.OUTER_SIZE + this.#roomSize * 7 , Maze.OUTER_SIZE + this.#roomSize),
             canvasContext: this.#canvasContext,
             rotation: Maze.ROTATIONS[randomRotation]
         }));
@@ -180,6 +180,8 @@ class Maze {
         const isVertical = direction === Direction.TOP || Direction.BOTTOM === direction;
         const modifiableSection = isVertical ? this.takeRoomsRow(position) : this.takeRoomsColumn(position);
 
+        console.log('modifiable section', modifiableSection.map(i => i.id));
+
         if (modifiableSection.length == 0) {
             throw new AppException("Array of moving objects is empty");
         }
@@ -187,7 +189,7 @@ class Maze {
         modifiableSection.map(room => room.stepMove(direction, this.clearSection));
 
         this.#currentRoom.stepMove(direction, this.clearSection);
-        const lastMoving = direction === Direction.BOTTOM || direction === Direction.LEFT ? modifiableSection[modifiableSection.length - 1] : modifiableSection[0];
+        const lastMoving = direction === Direction.BOTTOM || direction === Direction.RIGHT ? modifiableSection[modifiableSection.length - 1] : modifiableSection[0];
 
         const modifiableIds = modifiableSection.map(i => i.id);
         let previous; 
@@ -220,8 +222,7 @@ class Maze {
 
             return room;
         }));
-
-        console.log(this.takeRoomsRow(position).map(i => i.id))
+        
         this.#currentRoom = lastMoving;
     }
 
