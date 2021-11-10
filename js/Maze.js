@@ -10,45 +10,16 @@ import { Direction } from "./constants/direction.js";
 import { AppException } from "./exceptions/AppException.js";
 import { WrongDirectionException } from "./exceptions/WrongDirectionException.js";
 import { ArrayUtility } from "./util/ArrayUtility.js";
+import { BaseConfig } from "./BaseConfig.js";
 
 class Maze {
-    static MAZE_SIZE = 7;
+    static MAZE_SIZE = BaseConfig.getInstance().getMazeSize();
     static ARROWS_SIZE = Math.floor(Maze.MAZE_SIZE / 2) * 4;
-    static ROTATIONS = [Rotations.BOTTOM, Rotations.RIGHT, Rotations.TOP, Rotations.LEFT];
-    static SIZE = 512;
-    static OUTER_SIZE = 150;
-    static FIXED_ROOMS = [
-        [
-            {rotation: Rotations.BOTTOM, src: 1}, 
-            {rotation: Rotations.BOTTOM, src: 2}, 
-            {rotation: Rotations.BOTTOM, src: 2},
-            {rotation: Rotations.RIGHT, src: 1}
-        ],
-        [
-            {rotation: Rotations.LEFT, src: 2}, 
-            {rotation: Rotations.LEFT, src: 2}, 
-            {rotation: Rotations.BOTTOM, src: 2}, 
-            {rotation: Rotations.RIGHT, src: 2}
-        ],
-        [
-            {rotation: Rotations.LEFT, src: 2}, 
-            {rotation: Rotations.TOP, src: 2}, 
-            {rotation: Rotations.RIGHT, src: 2}, 
-            {rotation: Rotations.RIGHT, src: 2}
-        ],
-        [
-            {rotation: Rotations.LEFT, src: 1}, 
-            {rotation: Rotations.TOP, src: 2}, 
-            {rotation: Rotations.TOP, src: 2}, 
-            {rotation: Rotations.TOP, src: 1}
-        ]
-    ]; 
-
-    static straightRoom = '../assets/room.svg';
-    static bendRoom = '../assets/bend-room.svg';
-    static tRoom = '../assets/t-room.svg';
-
-    static srcImages = ['../assets/room.svg', '../assets/bend-room.svg', '../assets/t-room.svg'];
+    static ROTATIONS = BaseConfig.getInstance().getRotations();
+    static SIZE = BaseConfig.getInstance().getMazeCanvasSize();
+    static OUTER_SIZE = BaseConfig.getInstance().getOffsetMazeCanvasSize();
+    static FIXED_ROOMS =  BaseConfig.getInstance().getMazeFixedRooms();
+    static srcImages = BaseConfig.getInstance().getSrcImages();
     static images = ArrayUtility.shuffle([...Array(13).fill(Maze.srcImages[0]), ...Array(15).fill(Maze.srcImages[1]), ...Array(6).fill(Maze.srcImages[2])]);
 
     #canvas;
@@ -86,6 +57,8 @@ class Maze {
         this.initArrows();
         this.addkeyboardEventListeners();
         this.rotateOnClickCurrentRoom();
+
+        console.log(BaseConfig.getInstance().getSrcImages());
     }  
 
     async initArrows() {
