@@ -187,9 +187,9 @@ class Maze {
             throw new AppException("Array of moving objects is empty");
         }
 
-        modifiableSection.map(room => room.stepMove(direction, this.clearSection, this.hasRoomOnPosition));
+        modifiableSection.map(room => room.stepMove(direction, this.clearSection));
 
-        this.#currentRoom.stepMove(direction, this.clearSection, this.hasRoomOnPosition);
+        this.#currentRoom.stepMove(direction, this.clearSection);
         const lastMoving = direction === Direction.BOTTOM || direction === Direction.RIGHT ? modifiableSection[modifiableSection.length - 1] : modifiableSection[0];
 
         const modifiableIds = modifiableSection.map(i => i.id);

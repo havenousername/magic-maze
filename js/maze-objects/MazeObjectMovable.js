@@ -35,7 +35,7 @@ class MazeObjectMovable {
         return doReset;
     }
 
-    async stepMove(direction, clear, hasItemOnPosition) {
+    async stepMove(direction, clear, hasItemOnPosition = () => false) {
         this.#previousPosition = this.position;
         let undoMove = false;
         switch (direction) {
