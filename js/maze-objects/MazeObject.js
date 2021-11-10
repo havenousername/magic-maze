@@ -3,13 +3,15 @@ import { Point } from "../util/Point.js";
 import { Position } from "../util/Position.js";
 
 class MazeObject {
+    static NUMBER_OF_OBJECTS = 0;  
     #position;
     #src;
     #canvasContentRef;
     #rotation;
     #isDrawn;
+    #id;
 
-    constructor({ src, position, canvasContext, rotation = 0 }) {
+    constructor({ src, position, canvasContext, rotation = 0, id = MazeObject.NUMBER_OF_OBJECTS }) {
         if (!canvasContext) {
             throw new InvalidArgumentException("Maze Object Error. Canvas context was not provided");
         }
@@ -18,6 +20,8 @@ class MazeObject {
         this.#rotation = rotation;
         this.#canvasContentRef = canvasContext;
         this.#isDrawn = false;
+        this.#id = id;
+        MazeObject.NUMBER_OF_OBJECTS++;
     } 
 
     async draw() {
@@ -52,6 +56,10 @@ class MazeObject {
         
     }
 
+    set position(position) {
+        this.#position = position;
+    }
+
 
     get position() {
         return this.#position;
@@ -69,10 +77,25 @@ class MazeObject {
         return this.#rotation * Math.PI / 180; 
     }
 
+    get rotation() {
+        return this.#rotation;
+    }
+
     get halfSize() {
         return new Point(
             (this.#position.width) / 2,
             this.#position.height / 2
+        );
+    }
+
+    get endPoint() {
+        return this.position.endPoint;
+    }
+    
+    get startPoint() {
+        return new Point(
+            this.position.point.x, 
+            this.position.point.y
         );
     }
 
@@ -85,6 +108,10 @@ class MazeObject {
             this.#position.point.x + this.halfSize.x, 
             this.#position.point.y + this.halfSize.y
         );
+    }
+
+    get id() {
+        return this.#id;
     }
 }
 
