@@ -101,7 +101,7 @@ class Maze {
                 position,
                 canvasContext: this.#canvasContext,
                 rotation: rotation
-            }), this, index);
+            }), this, (ind * 2) - 1,  index);
         });
         this.#arrows.map(async arrow => await arrow.draw());
     }
@@ -149,7 +149,6 @@ class Maze {
                         position: new Position(this.#roomSize, this.#roomSize, (roomIndex * this.#roomSize) + Maze.OUTER_SIZE, (rowIndex * this.#roomSize) + Maze.OUTER_SIZE), 
                         canvasContext: this.#canvasContext,
                         rotation: mazeProps.rotation,
-                        id: +(String(rowIndex) + String(roomIndex))
                     });
                 }
 
@@ -159,7 +158,6 @@ class Maze {
                     position: new Position(this.#roomSize, this.#roomSize, (rowIndex * this.#roomSize) + Maze.OUTER_SIZE, (roomIndex * this.#roomSize) + Maze.OUTER_SIZE), 
                     canvasContext: this.#canvasContext,
                     rotation: Maze.ROTATIONS[randomRotation],
-                    id: +(String(rowIndex) + String(roomIndex))
                 }));
             }));
 
@@ -178,20 +176,65 @@ class Maze {
         this.#canvasContext.fillRect(Maze.OUTER_SIZE, Maze.OUTER_SIZE, this.#canvas.width - 2 * Maze.OUTER_SIZE, this.#canvas.height - 2 * Maze.OUTER_SIZE);
     }
 
-    changeCurrentMove(direction) { 
-        if (this.movingObjects.length == 0) {
+    changeCurrentMove(direction, position) { 
+        const isVertical = direction === Direction.TOP || Direction.BOTTOM === direction;
+        const modifiableSection = isVertical ? this.takeRoomsRow(position) : this.takeRoomsColumn(position);
+
+        if (modifiableSection.length == 0) {
             throw new AppException("Array of moving objects is empty");
         }
-        this.movingObjects.map(room => room.stepMove(direction, this.clearSection));
-        const lastMoving = direction === Direction.TOP || direction === Direction.LEFT ?  
-        this.movingObjects[0] : 
-        this.movingObjects[this.movingObjects.length - 1];
-        const currentRoom = this.currentRoom;
 
-        this.#rooms = this.#rooms.map(rooms => rooms
-            .map(room => room.id === lastMoving.id ? currentRoom : room));
-        this.#currentRoom.stepMove(direction, this.clearSection);    
+        modifiableSection.map(room => room.stepMove(direction, this.clearSection));
+
+        this.#currentRoom.stepMove(direction, this.clearSection);
+        const lastMoving = direction === Direction.BOTTOM || direction === Direction.LEFT ? modifiableSection[modifiableSection.length - 1] : modifiableSection[0];
+
+        const modifiableIds = modifiableSection.map(i => i.id);
+        let previous; 
+        const newModifiable = modifiableSection.map((room, index) => {
+            if (modifiableIds.includes(room.id)  && (direction === Direction.TOP || direction === Direction.LEFT)) {
+                if (modifiableSection[index + 1]) {
+                    return modifiableSection[index + 1];
+                } else {
+                    return this.#currentRoom;
+                }
+            } else if (modifiableIds.includes(room.id) && (direction === Direction.BOTTOM || direction === Direction.RIGHT)) {
+                if (modifiableSection[index - 1]) {
+                    const current = previous;
+                    previous = room;
+                    return current;
+                } else {
+                    previous = room;
+                    return this.#currentRoom;
+                }
+            } else {
+                return room;
+            }
+        }); 
+
+        this.#rooms = this.#rooms.map((rooms, rowIndex) => rooms.map((room, index) => {
+            let ind = modifiableSection.findIndex(i => i.id === room.id);
+            if (ind !== -1) {
+                return newModifiable[ind];
+            }
+
+            return room;
+        }));
+
+        console.log(this.takeRoomsRow(position).map(i => i.id))
         this.#currentRoom = lastMoving;
+    }
+
+    takeRoomsRow(row) {
+        return this.#rooms[row];
+    }
+
+    takeRoomsColumn(column) {
+        return this.transposedRooms[column];
+    }
+
+    get transposedRooms() {
+        return this.#rooms.reduce((m, r) => (r.forEach((v, i) => (m[i] ??= [], m[i].push(v))), m), []);
     }
 
     get rooms() {
@@ -200,14 +243,6 @@ class Maze {
 
     get flatRooms() {
         return this.rooms.flat(1);
-    }
-    
-    get movingObjects() {
-        return this.flatRooms.filter(room => 
-            (room.startPoint.x === this.#currentRoom.startPoint.x ||
-            room.startPoint.y === this.#currentRoom.startPoint.y) && 
-            (room instanceof MazeObjectMovable)  
-        );
     }
 
     get currentRoom() {

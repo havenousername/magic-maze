@@ -86,6 +86,8 @@ class Position {
             this.distanceToPoint(position.rightBottom)
         ]; 
 
+        // console.log(distance, position, this);
+
         return distance.reduce((accum, curr) => {
             const x = accum.x < curr.x ? accum.x : curr.x;
             const y = accum.y < curr.y ? accum.y : curr.y;
