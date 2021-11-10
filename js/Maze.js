@@ -79,6 +79,7 @@ class Maze {
         this.#arrows = Array(Maze.ARROWS_SIZE).fill(false);
         this.initArrows();
         this.addkeyboardEventListeners();
+        this.rotateOnClickCurrentRoom();
     }  
 
     async initArrows() {
@@ -254,6 +255,17 @@ class Maze {
             }
             
         })
+    }
+
+    rotateOnClickCurrentRoom() {
+        this.#canvas.addEventListener('click', e => {
+            const isClickedX = this.#currentRoom.startPoint.x < e.offsetX && this.#currentRoom.endPoint.x > e.offsetX;
+            const isClickedY = this.#currentRoom.startPoint.y < e.offsetY && this.#currentRoom.endPoint.y > e.offsetY;
+
+            if (isClickedX && isClickedY) {
+                this.#currentRoom.rotate(this.#currentRoom.rotation - Rotations.RIGHT);
+            }
+        });
     }
 
     hasRoomOnPosition = (position) => {

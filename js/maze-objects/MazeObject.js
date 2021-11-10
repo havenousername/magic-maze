@@ -77,6 +77,10 @@ class MazeObject {
         return this.#rotation * Math.PI / 180; 
     }
 
+    set rotation(rotation) {
+        this.#rotation = rotation;
+    }
+
     get rotation() {
         return this.#rotation;
     }

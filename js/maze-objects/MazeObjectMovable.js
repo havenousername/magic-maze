@@ -13,7 +13,7 @@ class MazeObjectMovable {
     }
 
     async move(x,y, clear) {
-        clear(this.startPoint.x, this.startPoint.y, this.position.width, this.position.height);
+        clear(this.startPoint.x - 1, this.startPoint.y - 1, this.position.width + 1, this.position.height + 1);
         this.#mazeObject.position = new Position(this.position.width, this.position.height, x, y);
         await this.#mazeObject.draw();
     }
@@ -71,6 +71,11 @@ class MazeObjectMovable {
             default:
                 throw new WrongDirectionException(direction)
         }
+    }
+
+    async rotate(degree) {
+        this.#mazeObject.rotation = degree;
+        this.draw();
     }
 
     async draw() {
