@@ -116,6 +116,10 @@ class Position {
 
         return new Point(Math.abs(currentPoint.x - point.x), Math.abs(currentPoint.y - point.y));
     }
+
+    isEqual(position) {
+        return this.#point.isEqual(position.point) && position.width === this.#width && position.height === this.#height;
+    } 
 } 
 
 export { Position };

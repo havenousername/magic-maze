@@ -15,7 +15,6 @@ class ArrowObject extends MazeObjectMovable {
         this.#isHovered = false;
         this.#arrayPosition = arrayPosition;
         this.activateClickEvent();
-        // this.activateHover();
     }
 
     hasIntersectActiveRoom() {

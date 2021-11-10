@@ -4,29 +4,69 @@ import { Position } from "../util/Position.js";
 
 class MazeObjectMovable {
     #mazeObject
-    constructor(mazeObject) {
+    #positionLimit
+    #previousPosition
+    constructor(mazeObject, positionLimit) {
         this.#mazeObject = mazeObject;
+        this.#positionLimit = positionLimit;
+        this.#previousPosition = mazeObject.position;
     }
 
-    move(x,y, clear) {
+    async move(x,y, clear) {
         clear(this.startPoint.x, this.startPoint.y, this.position.width, this.position.height);
         this.#mazeObject.position = new Position(this.position.width, this.position.height, x, y);
-        this.#mazeObject.draw();
+        await this.#mazeObject.draw();
     }
 
-    stepMove(direction, clear) {
+    async resetPosition(clear) {
+        if (this.position.isEqual(this.#previousPosition)) {
+            return;
+        }
+
+        this.move(this.#previousPosition.point.x, this.#previousPosition.point.y, clear);
+    }
+
+    notAllowMove(direction, coordinate) {
+        const isDirectionEnd = direction === Direction.BOTTOM || direction === Direction.RIGHT;
+        const isDirectionUnderLimitEnd = coordinate > this.#positionLimit[direction];
+        const isDirectionBelowLimitStart = coordinate < this.#positionLimit[direction];
+        const doReset = (isDirectionEnd && isDirectionUnderLimitEnd) || (!isDirectionEnd && isDirectionBelowLimitStart);
+
+        return doReset;
+    }
+
+    async stepMove(direction, clear, hasItemOnPosition) {
+        this.#previousPosition = this.position;
+        let undoMove = false;
         switch (direction) {
             case Direction.LEFT: 
-                this.move(this.startPoint.x - this.position.width, this.startPoint.y, clear);
+                undoMove = hasItemOnPosition(new Position(this.position.width, this.position.height, this.startPoint.x - this.position.width, this.startPoint.y));
+                if (this.notAllowMove(direction, this.startPoint.x - this.position.width) || undoMove) {
+                    break;
+                }
+
+                await this.move(this.startPoint.x - this.position.width, this.startPoint.y, clear);
                 break;
             case Direction.RIGHT: 
-                this.move(this.startPoint.x + this.position.width, this.startPoint.y, clear);
+                undoMove = hasItemOnPosition(new Position(this.position.width, this.position.height, this.startPoint.x + this.position.width, this.startPoint.y));
+                if (this.notAllowMove(direction, this.startPoint.x + this.position.width) || undoMove) {
+                    break;
+                }
+                await this.move(this.startPoint.x + this.position.width, this.startPoint.y, clear);
                 break;
             case Direction.TOP: 
-                this.move(this.startPoint.x, this.startPoint.y - this.position.height, clear);
+                undoMove = hasItemOnPosition(new Position(this.position.width, this.position.height, this.startPoint.x, this.startPoint.y - this.position.height));
+                if (this.notAllowMove(direction, this.startPoint.y - this.position.height) || undoMove) {
+                    break;
+                }
+                await this.move(this.startPoint.x, this.startPoint.y - this.position.height, clear);
                 break;
             case Direction.BOTTOM:
-                this.move(this.startPoint.x, this.startPoint.y + this.position.height, clear)
+                undoMove = hasItemOnPosition(new Position(this.position.width, this.position.height, this.startPoint.x, this.startPoint.y + this.position.height));
+                if (this.notAllowMove(direction, this.startPoint.y + this.position.height) || undoMove) {
+                    break;
+                }
+                await this.move(this.startPoint.x, this.startPoint.y + this.position.height, clear)
                 break;
             default:
                 throw new WrongDirectionException(direction)

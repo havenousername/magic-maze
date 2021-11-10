@@ -7,8 +7,8 @@ import { Position } from "./util/Position.js";
 import { Rotations } from "./constants/rotations.js";
 import { ArrowObject } from "./maze-objects/ArrowObject.js";
 import { Direction } from "./constants/direction.js";
-import { WrongDirectionException } from "./exceptions/WrongDirectionException.js";
 import { AppException } from "./exceptions/AppException.js";
+import { WrongDirectionException } from "./exceptions/WrongDirectionException.js";
 
 class Maze {
     static MAZE_SIZE = 7;
@@ -78,14 +78,16 @@ class Maze {
 
         this.#arrows = Array(Maze.ARROWS_SIZE).fill(false);
         this.initArrows();
+        this.addkeyboardEventListeners();
     }  
 
     async initArrows() {
         this.#arrows = this.#arrows.map((_, index) => {
             const ind = (index % Math.floor(Maze.ARROWS_SIZE / 4) + 1);
-            const horizontalX = Maze.OUTER_SIZE + ind * ( Maze.SIZE / 3) - (Maze.SIZE / Maze.MAZE_SIZE);
+            // careful will work only for squares !!
+            let horizontalX = Maze.OUTER_SIZE + (ind * 2) * (this.#currentRoom.position.width) - this.#currentRoom.halfSize.x;
             const verticalY = index < 6 ?  20 : Maze.SIZE + (Maze.OUTER_SIZE + 110);
-            
+
             let position;
             let rotation = Rotations.LEFT;
             if (index < 3 || index > 8) {
@@ -115,7 +117,7 @@ class Maze {
             position: new Position(this.#roomSize, this.#roomSize, Maze.OUTER_SIZE + this.#roomSize * 7 , Maze.OUTER_SIZE + this.#roomSize),
             canvasContext: this.#canvasContext,
             rotation: Maze.ROTATIONS[randomRotation]
-        }));
+        }), this.bounds);
 
         await this.#currentRoom.draw();
     }
@@ -158,7 +160,7 @@ class Maze {
                     position: new Position(this.#roomSize, this.#roomSize, (rowIndex * this.#roomSize) + Maze.OUTER_SIZE, (roomIndex * this.#roomSize) + Maze.OUTER_SIZE), 
                     canvasContext: this.#canvasContext,
                     rotation: Maze.ROTATIONS[randomRotation],
-                }));
+                }), this.bounds);
             }));
 
         this.#rooms.map((roomRow) => roomRow.map(async room => {
@@ -173,6 +175,7 @@ class Maze {
         this.fillSectionBackground(0, 0, this.#canvas.height, this.#canvas.height);
 
         this.#canvasContext.fillStyle  = Colors.BACKGROUND_ORANGE;
+        console.log(this.#canvas.width - 2 * Maze.OUTER_SIZE);
         this.#canvasContext.fillRect(Maze.OUTER_SIZE, Maze.OUTER_SIZE, this.#canvas.width - 2 * Maze.OUTER_SIZE, this.#canvas.height - 2 * Maze.OUTER_SIZE);
     }
 
@@ -180,15 +183,13 @@ class Maze {
         const isVertical = direction === Direction.TOP || Direction.BOTTOM === direction;
         const modifiableSection = isVertical ? this.takeRoomsRow(position) : this.takeRoomsColumn(position);
 
-        console.log('modifiable section', modifiableSection.map(i => i.id));
-
         if (modifiableSection.length == 0) {
             throw new AppException("Array of moving objects is empty");
         }
 
-        modifiableSection.map(room => room.stepMove(direction, this.clearSection));
+        modifiableSection.map(room => room.stepMove(direction, this.clearSection, this.hasRoomOnPosition));
 
-        this.#currentRoom.stepMove(direction, this.clearSection);
+        this.#currentRoom.stepMove(direction, this.clearSection, this.hasRoomOnPosition);
         const lastMoving = direction === Direction.BOTTOM || direction === Direction.RIGHT ? modifiableSection[modifiableSection.length - 1] : modifiableSection[0];
 
         const modifiableIds = modifiableSection.map(i => i.id);
@@ -233,6 +234,40 @@ class Maze {
     takeRoomsColumn(column) {
         return this.transposedRooms[column];
     }
+
+    addkeyboardEventListeners() {
+        window.addEventListener('keydown', e => {
+            const codeAssociation = {
+                'ArrowUp': Direction.TOP,
+                'ArrowDown': Direction.BOTTOM,
+                'ArrowLeft': Direction.LEFT,
+                'ArrowRight': Direction.RIGHT,
+            }
+
+            try {
+                this.#currentRoom.stepMove(codeAssociation[e.code], this.clearSection, this.hasRoomOnPosition);
+            } catch (e) {
+                if (e instanceof WrongDirectionException) {}
+                else {
+                    console.error(e);
+                }
+            }
+            
+        })
+    }
+
+    hasRoomOnPosition = (position) => {
+        return this.flatRooms.find(room => room.position.isEqual(position));
+    }
+
+    get bounds() {
+        return ({
+            [Direction.LEFT]: Maze.OUTER_SIZE / 2,
+            [Direction.TOP]: Maze.OUTER_SIZE / 2,
+            [Direction.BOTTOM]: this.#canvas.height - (Maze.OUTER_SIZE ),
+            [Direction.RIGHT]: this.#canvas.width - (Maze.OUTER_SIZE ),
+        });
+    } 
 
     get transposedRooms() {
         return this.#rooms.reduce((m, r) => (r.forEach((v, i) => (m[i] ??= [], m[i].push(v))), m), []);
