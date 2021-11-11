@@ -125,6 +125,10 @@ class MazeObjectMovable {
     get id() {
         return this.#mazeObject.id;
     }
+
+    get mazeObject() {
+        return this.#mazeObject;
+    }
 }
 
 export { MazeObjectMovable };

@@ -58,7 +58,7 @@ class Maze {
         this.addkeyboardEventListeners();
         this.rotateOnClickCurrentRoom();
 
-        console.log(BaseConfig.getInstance().getSrcImages());
+        console.log(this.#currentRoom.mazeObject.skelethone);
     }  
 
     async initArrows() {

@@ -64,6 +64,15 @@ const BaseConfig = (function() {
             },
             getRotations() {
                 return rotations;
+            },
+            getStandardRoomSrc() {
+                return srcImages[0];
+            },
+            getTRoomSrc() {
+                return srcImages[2];
+            },
+            getBendRoomSrc() {
+                return srcImages[1];
             }
         }
     }
