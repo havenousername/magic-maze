@@ -1,16 +1,22 @@
 import { BaseConfig } from "../BaseConfig.js";
+import { Coordinate } from "../constants/coordinate.js";
+import { Direction } from "../constants/direction.js";
 import { Rotations } from "../constants/rotations.js";
 import { AppException } from "../exceptions/AppException.js";
+import { MazeRoomShift } from "../util/MazeRoomShift.js";
 import { Point } from "../util/Point.js";
+import { Position } from "../util/Position.js";
 import { MazeObject } from "./MazeObject.js";
 
 
 class MazeRoom extends MazeObject {
-    #skelethonePoints
+    #skelethonePoints;
+    #mazeShifter;
 
-    constructor({ src, position, canvasContext, rotation }) {
+    constructor({ src, position, canvasContext, rotation }, maze) {
         super({ src, position, canvasContext, rotation });
         this.#skelethonePoints = [];
+        this.#mazeShifter = new MazeRoomShift(maze, this);
         this.#initSketethonePoints();
     }
 
@@ -30,27 +36,35 @@ class MazeRoom extends MazeObject {
         }
     }
 
+    initSketethonePoints() {
+        this.#initSketethonePoints();
+    }
+
     #tImageStrategy() {
+        const goTop = [0, -this.halfSize.y];
+        const goBottom = [0, this.halfSize.y];
+        const goLeft = [-this.halfSize.x, 0];
+        const goRight = [this.halfSize.x, 0];
         const rotationAssoc = {
             [Rotations.BOTTOM]: {
-                endOne: ['leftTop', 0, this.halfSize.y],
-                endTwo: ['rightTop', 0, this.halfSize.y],
-                endThree: ['leftBottom', this.halfSize.x, 0]
+                endOne: goLeft,
+                endTwo: goRight,
+                endThree: goBottom
             },
             [Rotations.RIGHT]: {
-                endOne: ['leftTop',0, this.halfSize.y],
-                endTwo: ['leftTop', this.halfSize.x, 0],
-                endThree: ['leftBottom', this.halfSize.x, 0]
+                endOne: goLeft,
+                endTwo: goTop,
+                endThree: goBottom
             },
             [Rotations.TOP]: {
-                endOne: ['leftTop', 0, this.halfSize.y],
-                endTwo: ['leftTop', this.halfSize.x, 0],
-                endThree: ['rightTop', 0, this.halfSize.y],
+                endOne: goLeft,
+                endTwo: goTop,
+                endThree: goRight,
             },
             [Rotations.LEFT]: {
-                endOne: ['leftTop', this.halfSize.x, 0],
-                endTwo: ['leftBottom', this.halfSize.x, 0],
-                endThree: ['rightTop', 0, this.halfSize.y]
+                endOne: goTop,
+                endTwo: goBottom,
+                endThree: goRight
             }
         };
 
@@ -58,22 +72,26 @@ class MazeRoom extends MazeObject {
     }
 
     #bendImageStrategy() {
+        const goTop = [0, -this.halfSize.y];
+        const goBottom = [0, this.halfSize.y];
+        const goLeft = [-this.halfSize.x, 0];
+        const goRight = [this.halfSize.x, 0];
         const rotationAssoc = {
             [Rotations.BOTTOM]: {
-                endOne: ['leftBottom', this.halfSize.x, 0],
-                endTwo: ['rightTop', 0, this.halfSize.y],
+                endOne: goBottom,
+                endTwo: goRight,
             },
             [Rotations.RIGHT]: {
-                endOne: ['leftTop', 0, this.halfSize.y],
-                endTwo: ['leftBottom', this.halfSize.x, 0]
+                endOne: goBottom,
+                endTwo: goLeft
             },
             [Rotations.TOP]: {
-                endOne: ['leftTop', 0, this.halfSize.y],
-                endTwo: ['leftTop', this.halfSize.x, 0]
+                endOne: goLeft,
+                endTwo: goTop
             },
             [Rotations.LEFT]: {
-                endOne: ['leftTop', 0, this.halfSize.y],
-                endTwo: ['rightTop', 0, this.halfSize.y],
+                endOne: goTop,
+                endTwo: goRight,
             }
         }
 
@@ -81,22 +99,26 @@ class MazeRoom extends MazeObject {
     }
 
     #standardImageStrategy() {
+        const goTop = [0, -this.halfSize.y];
+        const goBottom = [0, this.halfSize.y];
+        const goLeft = [-this.halfSize.x, 0];
+        const goRight = [this.halfSize.x, 0];
         const rotationAssoc = {
             [Rotations.BOTTOM]: {
-                endOne: ['leftTop', 0, this.halfSize.y],
-                endTwo: ['rightTop', 0, this.halfSize.y],
+                endOne: goLeft,
+                endTwo: goRight,
             },
             [Rotations.RIGHT]: {
-                endOne: ['leftTop', this.halfSize.x, 0],
-                endTwo: ['leftBottom', this.halfSize.x, 0]
+                endOne: goTop,
+                endTwo: goBottom
             },
             [Rotations.TOP]: {
-                endOne: ['leftTop', 0, this.halfSize.y],
-                endTwo: ['rightTop', 0, this.halfSize.y]
+                endOne: goLeft,
+                endTwo: goRight,
             },
             [Rotations.LEFT]: {
-                endOne: ['leftTop', this.halfSize.x, 0],
-                endTwo: ['leftBottom', this.halfSize.x, 0]
+                endOne: goTop,
+                endTwo: goBottom
             }
         }
 
@@ -104,18 +126,78 @@ class MazeRoom extends MazeObject {
     }
 
     #generateSkelethone(strategy) {
-        for (let i = 0; i < Object.keys(strategy[this.rotation]).length; i++) {
-            const currentEnd = Object.keys(strategy[this.rotation])[i];
+        for (let i = 0; i < Object.keys(strategy[this.circleRotation]).length; i++) {
+            const currentEnd = Object.keys(strategy[this.circleRotation])[i];
             this.#skelethonePoints[i] = new Point(
-                this.position[strategy[this.rotation][currentEnd][0]].x + strategy[this.rotation][currentEnd][1], 
-                this.position[strategy[this.rotation][currentEnd][0]].y + strategy[this.rotation][currentEnd][2]
+                this.center.x + strategy[this.circleRotation][currentEnd][0], 
+                this.center.y + strategy[this.circleRotation][currentEnd][1]
             );
         }
+    }
+
+
+    getNeighbour(direction) {
+        const rotationAssoc = {
+            [Direction.LEFT]: this.#mazeShifter.prevX, 
+            [Direction.TOP]: this.#mazeShifter.prevY,
+            [Direction.RIGHT]: this.#mazeShifter.nextX,
+            [Direction.BOTTOM]: this.#mazeShifter.nextY,
+        };
+
+        return rotationAssoc[direction]();
+    }
+
+    getNeighbours(getArray = true) {
+        if (getArray) {
+            return [
+                this.#mazeShifter.prevX(), 
+                this.#mazeShifter.prevY(),
+                this.#mazeShifter.nextX(),
+                this.#mazeShifter.nextY()
+            ]
+            .filter(neighbour => neighbour);
+        }
+
+        return ({
+            [Direction.LEFT]: this.#mazeShifter.prevX(), 
+            [Direction.TOP]: this.#mazeShifter.prevY(),
+            [Direction.RIGHT]: this.#mazeShifter.nextX(),
+            [Direction.BOTTOM]: this.#mazeShifter.nextY(),
+        })
+    }
+
+    calculateValidNeighbours(previousNeighbour = undefined) {
+        this.#initSketethonePoints();
+        let availableNeighbours = [];
+
+        
+        for (const neighbour of this.getNeighbours()) {
+            const interactionPoint = this.skelethone.find(point => neighbour.skelethone.find(neighbourPoint => neighbourPoint.isEqual(point)));
+            if (interactionPoint && (!previousNeighbour || previousNeighbour.id !== neighbour.id)) {
+                availableNeighbours.push(neighbour);
+            }
+        }
+
+        for (const neighbour of availableNeighbours) {
+            availableNeighbours = [...availableNeighbours, ...neighbour.calculateValidNeighbours(this)];
+        }
+
+        return availableNeighbours;
     }
 
     get skelethone() {
         return this.#skelethonePoints;
     } 
+
+    changePosition(position) {
+        super.changePosition(position);
+        this.initSketethonePoints();
+    }
+
+    changeRotation(rotation) {
+        super.changeRotation(rotation);
+        this.initSketethonePoints();
+    }
 }
 
 

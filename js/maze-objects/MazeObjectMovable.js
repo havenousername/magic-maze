@@ -14,7 +14,7 @@ class MazeObjectMovable {
 
     async move(x,y, clear) {
         clear(this.startPoint.x - 1, this.startPoint.y - 1, this.position.width + 1, this.position.height + 1);
-        this.#mazeObject.position = new Position(this.position.width, this.position.height, x, y);
+        this.#mazeObject.changePosition(new Position(this.position.width, this.position.height, x, y));
         await this.#mazeObject.draw();
     }
 
@@ -74,7 +74,7 @@ class MazeObjectMovable {
     }
 
     async rotate(degree) {
-        this.#mazeObject.rotation = degree;
+        this.#mazeObject.changeRotation(degree);
         this.draw();
     }
 
@@ -82,8 +82,24 @@ class MazeObjectMovable {
         await this.#mazeObject.draw();
     }
 
+    getNeighbour(direction) {
+        return this.#mazeObject.getNeighbour(direction);
+    }
+
+    calculateValidNeighbours(previousNeighbours) {
+        return this.#mazeObject.calculateValidNeighbours(previousNeighbours);
+    }
+ 
+    get skelethone() {
+        return this.#mazeObject.skelethone;
+    } 
+
     get position() {
         return this.#mazeObject.position;
+    }
+
+    set src(src) {
+        this.#mazeObject.src = src;
     }
 
     get src() {

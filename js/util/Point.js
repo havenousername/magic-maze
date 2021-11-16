@@ -73,6 +73,10 @@ class Point {
     isGreaterOrEqual(point) {
         return !this.isLess(point);
     }
-}
+
+    toString() {
+        return `Point{x: ${this.x}, y: ${this.y}}`;
+    }
+} 
 
 export { Point };

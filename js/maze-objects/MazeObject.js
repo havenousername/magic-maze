@@ -56,6 +56,14 @@ class MazeObject {
         
     }
 
+    changePosition(position) {
+        this.position = position;
+    }
+
+    changeRotation(rotation) {
+        this.rotation = rotation;
+    }
+
     set position(position) {
         this.#position = position;
     }
@@ -63,6 +71,10 @@ class MazeObject {
 
     get position() {
         return this.#position;
+    }
+
+    set src(src) {
+        this.#src = src;
     }
 
     get src() {
@@ -83,6 +95,10 @@ class MazeObject {
 
     get rotation() {
         return this.#rotation;
+    }
+
+    get circleRotation() {
+        return Math.abs(this.#rotation % 360);
     }
 
     get halfSize() {

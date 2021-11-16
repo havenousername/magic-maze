@@ -43,6 +43,15 @@ const BaseConfig = (function() {
 
         let rotations = [Rotations.BOTTOM, Rotations.RIGHT, Rotations.TOP, Rotations.LEFT];
 
+        const createImagePath = (src) => '../assets/' + src + '.svg'; 
+
+        let playersSrc = {
+            king: createImagePath('king'),
+            knight: createImagePath('knight'),
+            primce: createImagePath('prince'),
+            witch: createImagePath('witch'),
+        }
+
         instance = this;
 
         // public methods and variables
@@ -73,6 +82,21 @@ const BaseConfig = (function() {
             },
             getBendRoomSrc() {
                 return srcImages[1];
+            },
+            getPlayersSrc() {
+                return playersSrc;
+            },
+            allowEventExecution: (e, startPoint, endPoint, condition = true) => {
+                const isClickedX = startPoint.x < e.offsetX && endPoint.x > e.offsetX;
+                const isClickedY = startPoint.y < e.offsetY && endPoint.y > e.offsetY;
+    
+                return isClickedX && isClickedY && condition;
+            },
+            parseNameFromSource(src) {
+                return src.split('/')[2].split('.')[0];
+            },
+            takeSelectedSrc(src) {
+                return createImagePath(this.parseNameFromSource(src) + '-selected');
             }
         }
     }
@@ -88,4 +112,4 @@ const BaseConfig = (function() {
     }
 }());
 
-export { BaseConfig };
+export { BaseConfig  };

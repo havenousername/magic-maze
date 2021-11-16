@@ -1,3 +1,4 @@
+import { BaseConfig } from "../BaseConfig.js";
 import { Direction } from "../constants/direction.js";
 import { Rotations } from "../constants/rotations.js";
 import { MazeObjectMovable } from "./MazeObjectMovable.js";
@@ -30,9 +31,16 @@ class ArrowObject extends MazeObjectMovable {
 
     activateClickEvent() {
         this.#maze.canvas.addEventListener('click', e => {
-            const isClickedX = this.startPoint.x < e.offsetX && this.endPoint.x > e.offsetX;
-            const isClickedY = this.startPoint.y < e.offsetY && this.endPoint.y > e.offsetY;
-            if (isClickedX && isClickedY && this.hasIntersectActiveRoom() && this.isLocatedCloseToActiveRoom()) {    
+            const allowEventExecution = BaseConfig
+                .getInstance()
+                .allowEventExecution(
+                    e, 
+                    this.startPoint, 
+                    this.endPoint, 
+                    this.hasIntersectActiveRoom() && this.isLocatedCloseToActiveRoom()
+                );
+
+            if (allowEventExecution) {    
                 const associateRotation = {
                     [Rotations.LEFT]: Direction.RIGHT,
                     [Rotations.RIGHT]: Direction.LEFT,
@@ -40,6 +48,7 @@ class ArrowObject extends MazeObjectMovable {
                     [Rotations.TOP]: Direction.TOP
                 };
 
+                // console.log(associateRotation[this.rotation], this.#arrayPosition);
                 this.#maze.changeCurrentMove(associateRotation[this.rotation], this.#arrayPosition);
             }
         });
@@ -55,7 +64,6 @@ class ArrowObject extends MazeObjectMovable {
                 this.#isHovered = true;
             } else {
                 const hasHovered = this.#maze.arrows.find(arrow => arrow.isHovered);
-                console.log(hasHovered);
                 if (hasHovered) {
                     this.#maze.canvas.classList.add('cursor-auto');
                     this.#maze.canvas.classList.remove('cursor-pointer');

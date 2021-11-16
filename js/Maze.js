@@ -11,6 +11,9 @@ import { AppException } from "./exceptions/AppException.js";
 import { WrongDirectionException } from "./exceptions/WrongDirectionException.js";
 import { ArrayUtility } from "./util/ArrayUtility.js";
 import { BaseConfig } from "./BaseConfig.js";
+import { Player } from "./maze-objects/Player.js";
+import { MazeObject } from "./maze-objects/MazeObject.js";
+
 
 class Maze {
     static MAZE_SIZE = BaseConfig.getInstance().getMazeSize();
@@ -28,8 +31,10 @@ class Maze {
     #rooms;
     #currentRoom;
     #arrows;
+    #players;
+    #currentPlayer;
 
-    constructor(canvasId) {
+    constructor(canvasId, playerNumber = 2) {
         if (!canvasId) {
             throw new InvalidArgumentException("canvas id is undefined");
         }
@@ -55,11 +60,41 @@ class Maze {
 
         this.#arrows = Array(Maze.ARROWS_SIZE).fill(false);
         this.initArrows();
+
+        this.#players = Array(playerNumber).fill(false);
         this.addkeyboardEventListeners();
         this.rotateOnClickCurrentRoom();
 
-        console.log(this.#currentRoom.mazeObject.skelethone);
+        this.initPlayers();
+
+        // console.log(this.#rooms.map(i => i.map(j => [j.id, j])));
+        
+        setTimeout(() => {
+            this.#currentPlayer = this.#players[1];
+        });
     }  
+
+    async initPlayers() {
+        const cornerRooms = [this.leftTopRoom, this.rightBotttomRoom, this.leftBottomRoom, this.rightTopRoom];
+        this.#players = this.#players.map((_, index) => {
+            const src = Object.values(BaseConfig.getInstance().getPlayersSrc())[index];
+            const currentRoom = cornerRooms[index];
+            return new Player(
+                new MazeObject({
+                    src,
+                    position: new Position(35, 35, currentRoom.center.x - 35 / 2, currentRoom.center.y - 35 /2),
+                    canvasContext: this.#canvasContext,
+                    rotation: 0,
+                }),
+                this.boundsPlayer, 
+                this.#canvas,
+                currentRoom,
+                this
+            );
+        });
+
+        this.#players.map(async player => await player.draw());
+    }
 
     async initArrows() {
         this.#arrows = this.#arrows.map((_, index) => {
@@ -83,7 +118,7 @@ class Maze {
                 position,
                 canvasContext: this.#canvasContext,
                 rotation: rotation
-            }), this, (ind * 2) - 1,  index);
+            }, this), this, (ind * 2) - 1,  index);
         });
         this.#arrows.map(async arrow => await arrow.draw());
     }
@@ -97,7 +132,7 @@ class Maze {
             position: new Position(this.#roomSize, this.#roomSize, Maze.OUTER_SIZE + this.#roomSize * 7 , Maze.OUTER_SIZE + this.#roomSize),
             canvasContext: this.#canvasContext,
             rotation: Maze.ROTATIONS[randomRotation]
-        }), this.bounds);
+        }, this), this.bounds);
 
         await this.#currentRoom.draw();
     }
@@ -128,24 +163,26 @@ class Maze {
                     const mazeProps = Maze.FIXED_ROOMS[ Math.ceil(rowIndex / 2)][Math.ceil(roomIndex / 2)];
                     return new MazeRoom({
                         src: Maze.srcImages[mazeProps.src],
-                        position: new Position(this.#roomSize, this.#roomSize, (roomIndex * this.#roomSize) + Maze.OUTER_SIZE, (rowIndex * this.#roomSize) + Maze.OUTER_SIZE), 
+                        position: new Position(this.#roomSize, this.#roomSize, (rowIndex * this.#roomSize) + Maze.OUTER_SIZE, (roomIndex * this.#roomSize) + Maze.OUTER_SIZE), 
                         canvasContext: this.#canvasContext,
                         rotation: mazeProps.rotation,
-                    });
+                    }, this);
                 }
 
-                
                 return new MazeObjectMovable(new MazeRoom({
                     src: Maze.images[randomImageIndex],
                     position: new Position(this.#roomSize, this.#roomSize, (rowIndex * this.#roomSize) + Maze.OUTER_SIZE, (roomIndex * this.#roomSize) + Maze.OUTER_SIZE), 
                     canvasContext: this.#canvasContext,
-                    rotation: Maze.ROTATIONS[randomRotation],
-                }), this.bounds);
+                    rotation:  roomIndex === 0 && rowIndex === 1  ? 270 : Maze.ROTATIONS[randomRotation],
+                }, this), this.bounds);
             }));
 
         this.#rooms.map((roomRow) => roomRow.map(async room => {
             await room.draw();
-        }));
+        }));  
+
+        // const mazeRoomShift = new MazeRoomShift(this, this.#rooms[5][5]);
+        // console.log(this.takeRoomsColumn(5), this.takeRoomsRow(5));
     }
 
     initCanvas() {
@@ -166,7 +203,10 @@ class Maze {
             throw new AppException("Array of moving objects is empty");
         }
 
-        modifiableSection.map(room => room.stepMove(direction, this.clearSection));
+        modifiableSection.map(room => room.stepMove(direction, this.clearSection).catch(e => {
+            if (e instanceof WrongDirectionException) {}
+            else console.error(e);
+        }));
 
         this.#currentRoom.stepMove(direction, this.clearSection);
         const lastMoving = direction === Direction.BOTTOM || direction === Direction.RIGHT ? modifiableSection[modifiableSection.length - 1] : modifiableSection[0];
@@ -223,15 +263,12 @@ class Maze {
                 'ArrowRight': Direction.RIGHT,
             }
 
-            try {
-                this.#currentRoom.stepMove(codeAssociation[e.code], this.clearSection, this.hasRoomOnPosition);
-            } catch (e) {
-                if (e instanceof WrongDirectionException) {}
+            this.#currentRoom.stepMove(codeAssociation[e.code], this.clearSection, this.hasRoomOnPosition).catch(err => {
+                if (err instanceof WrongDirectionException) {}
                 else {
-                    console.error(e);
+                    console.error(err);
                 }
-            }
-            
+            }); 
         })
     }
 
@@ -241,7 +278,7 @@ class Maze {
             const isClickedY = this.#currentRoom.startPoint.y < e.offsetY && this.#currentRoom.endPoint.y > e.offsetY;
 
             if (isClickedX && isClickedY) {
-                this.#currentRoom.rotate(this.#currentRoom.rotation - Rotations.RIGHT);
+                this.#currentRoom.rotate(this.#currentRoom.rotation + Rotations.RIGHT);
             }
         });
     }
@@ -258,6 +295,16 @@ class Maze {
             [Direction.RIGHT]: this.#canvas.width - (Maze.OUTER_SIZE ),
         });
     } 
+
+    get boundsPlayer() {
+        return ({
+            [Direction.LEFT]: Maze.OUTER_SIZE,
+            [Direction.TOP]: Maze.OUTER_SIZE,
+            [Direction.BOTTOM]: this.#canvas.height - (Maze.OUTER_SIZE * 2),
+            [Direction.RIGHT]: this.#canvas.width - (Maze.OUTER_SIZE * 2),
+
+        })
+    }
 
     get transposedRooms() {
         return this.#rooms.reduce((m, r) => (r.forEach((v, i) => (m[i] ??= [], m[i].push(v))), m), []);
@@ -281,6 +328,30 @@ class Maze {
 
     get arrows() {
         return this.#arrows;
+    }
+
+    get leftTopRoom() {
+        const lastOnRow = this.takeRoomsRow(0);
+        return lastOnRow[0];
+    }
+
+    get rightTopRoom() {
+        const lastOnRow = this.takeRoomsRow(0);
+        return lastOnRow[lastOnRow.length - 1];
+    }
+
+    get leftBottomRoom() {
+        const firstOnRow = this.takeRoomsRow(this.#rooms.length - 1);
+        return firstOnRow[0];
+    }
+
+    get rightBotttomRoom() {
+        const lastOnRow = this.takeRoomsRow(this.#rooms.length - 1);
+        return lastOnRow[lastOnRow.length - 1];
+    }
+
+    get currentPlayer() {
+        return this.#currentPlayer;
     }
 }
 
