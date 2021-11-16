@@ -9,6 +9,8 @@ class Player extends MazeObjectMovable {
     #room;
     #previousSrc;
     #map;
+    #roomSrc;
+    #active;
     constructor(mazeObject, positionLimit, canvas, room, map) {
         super(mazeObject, positionLimit);
         this.#canvas = canvas;
@@ -18,6 +20,9 @@ class Player extends MazeObjectMovable {
         
         // console.log(this.#room.src, this.#activeRoomSrc);
         this.#map = map;
+        this.#roomSrc = BaseConfig.getInstance().parseNameFromSource(room.src);
+        this.#active = false;
+        this.#prevSources = [];
         this.activateClickListener();
     }
 
@@ -32,24 +37,42 @@ class Player extends MazeObjectMovable {
                     this.endPoint
                 );
             if (allowEventExecution && this.#map.currentPlayer.id === this.id) {
-                const neighbours = this.#room.calculateValidNeighbours();
+                this.#active = !this.#active;
 
-                
-                [this.#room,...neighbours].map(async neighbour => {
-                    await this.#onActiveChangeSrc(neighbour);
-                });
+                if (this.#active) {
+                    const neighbours = this.#room.calculateValidNeighbours();
+                    [this.#room,...neighbours].map(async neighbour => {
+                        await this.#onActiveChangeSrc(neighbour);
+                    });
+                } else {
+                    this.applyPreviousSources();
+                }
 
                 const currentSrc = this.src;
                 this.mazeObject.src = this.#previousSrc;
                 this.#previousSrc = currentSrc;
                 await this.draw(); 
+                
             }
         });
     } 
 
+    #prevSources; 
+
+    async applyPreviousSources() {
+        this.#prevSources.map(async source => {
+            const room = this.#map.flatRooms.find(room => room.id === source.id);    
+            if (room) {
+                room.src = source.src;
+                room.draw();
+            }
+        });
+    }
 
     async #onActiveChangeSrc(room) {
-        room.src = `${room.src.split('.svg')[0]}-${this.#name}.svg`;
+        this.#prevSources.push({ id: room.id, src: room.src });
+        // this.#prevSources.push({ id:  room.id, src: room.src});
+        room.src = `${room.src.split('.svg')[0]}-${this.#name}.svg`;     
         await room.draw();
     }
 
