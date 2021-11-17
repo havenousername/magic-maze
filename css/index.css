@@ -1,3 +1,84 @@
+@font-face {
+    font-family: 'Perfect Dark';
+    src: url('../fonts/pdark-webfont.woff2') format('woff2'),
+         url('../fonts/pdark-webfont.woff') format('woff');
+    font-weight: normal;
+    font-style: normal;
+
+}
+
 .body {
     background-color: #000;
+}
+
+.font-game {
+    font-family: 'Perfect Dark', Arial, Helvetica, sans-serif;
+}
+
+.max-h-2xl {
+    max-height: 37.5rem;
+}
+
+.bg-primary {
+    background-color: #AFB9C8;
+}
+
+.bg-dark {
+    background-color: #1B2021;
+}
+
+.bg-secondary {
+    background-color: #5F939A;
+}
+
+.border-primary {
+    border-color:  #5F939A;
+}
+
+.border-secondary {
+    border-color: #1B2021;
+}
+
+.bg-image {
+    background-image: url('../assets/jpg/background.jpg');
+}
+
+.text-dark {
+    color: #1B2021;
+}
+
+.btn-primary {
+    width: 100%;
+    
+    max-width: 21.875rem;
+    /* font-size: 3rem; */
+}
+
+.btn-secondary {
+    border-bottom: 5px solid #5F939A;
+    max-width: fit-content;
+}
+
+.cfg-input {
+    width: 100%;
+    max-width: 17.125rem;
+}
+
+.input-min-w {
+    min-width: 17.125rem;
+}
+
+.btn-small {
+    height: 58px;
+}
+
+.btn-big {
+    height: 6rem;
+}
+
+.modal-absolute-decorative {
+    left: 50%;
+    z-index: 0;
+    top: 50%;
+    transform: translate(-45%, -55%);
 }

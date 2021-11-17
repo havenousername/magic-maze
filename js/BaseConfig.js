@@ -45,6 +45,13 @@ const BaseConfig = (function() {
 
         const createImagePath = (src) => '../assets/' + src + '.svg'; 
 
+        function createElementFromString(str) {
+            const element = new DOMParser().parseFromString(str, 'text/html');
+            const child = element.documentElement.querySelector('body').firstChild;
+            return child;
+         };
+
+        Document.prototype.createElementFromString = createElementFromString;
         let playersSrc = {
             king: createImagePath('king'),
             knight: createImagePath('knight'),
@@ -56,6 +63,9 @@ const BaseConfig = (function() {
 
         // public methods and variables
         return {
+            createElementFromString(str) {
+                return createElementFromString(str);
+            },
             getSrcImages: function() {
                 return srcImages;
             },

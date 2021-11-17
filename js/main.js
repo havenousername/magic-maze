@@ -1,5 +1,5 @@
-import { Maze } from "./Maze.js";
+import { Game } from "./Game.js";
 
 document.addEventListener('DOMContentLoaded', () => {
-    new Maze('game-canvas', 4);
+    new Game("game-canvas");
 });

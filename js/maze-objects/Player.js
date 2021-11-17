@@ -1,6 +1,4 @@
 import { BaseConfig } from "../BaseConfig.js";
-import { Direction } from "../constants/direction.js";
-import { Position } from "../util/Position.js";
 import { MazeObjectMovable } from "./MazeObjectMovable.js";
 
 class Player extends MazeObjectMovable {
@@ -11,16 +9,16 @@ class Player extends MazeObjectMovable {
     #map;
     #roomSrc;
     #active;
-    constructor(mazeObject, positionLimit, canvas, room, map) {
+    #prevSources; 
+
+    constructor(mazeObject, name, positionLimit, canvas, room, map) {
         super(mazeObject, positionLimit);
         this.#canvas = canvas;
-        this.#name = BaseConfig.getInstance().parseNameFromSource(this.src);
+        this.#name = name;
         this.#room = room;
-        this.#previousSrc = BaseConfig.getInstance().takeSelectedSrc(this.src);
-        
-        // console.log(this.#room.src, this.#activeRoomSrc);
         this.#map = map;
         this.#roomSrc = BaseConfig.getInstance().parseNameFromSource(room.src);
+        this.#previousSrc = this.src;
         this.#active = false;
         this.#prevSources = [];
         this.activateClickListener();
@@ -41,23 +39,22 @@ class Player extends MazeObjectMovable {
 
                 if (this.#active) {
                     const neighbours = this.#room.calculateValidNeighbours();
-                    [this.#room,...neighbours].map(async neighbour => {
+                    [...neighbours].map(async neighbour => {
                         await this.#onActiveChangeSrc(neighbour);
                     });
+                    this.#previousSrc = this.#room.src;
+                    this.#room.src =  './../assets/selected/' + this.#roomSrc + '.svg';
                 } else {
                     this.applyPreviousSources();
-                }
-
-                const currentSrc = this.src;
-                this.mazeObject.src = this.#previousSrc;
-                this.#previousSrc = currentSrc;
-                await this.draw(); 
-                
+                    this.#room.src =  './../assets/' + this.#roomSrc + '.svg';
+                }   
+                await this.#room.draw();     
+                await this.draw();
             }
         });
     } 
 
-    #prevSources; 
+
 
     async applyPreviousSources() {
         this.#prevSources.map(async source => {
@@ -71,8 +68,7 @@ class Player extends MazeObjectMovable {
 
     async #onActiveChangeSrc(room) {
         this.#prevSources.push({ id: room.id, src: room.src });
-        // this.#prevSources.push({ id:  room.id, src: room.src});
-        room.src = `${room.src.split('.svg')[0]}-${this.#name}.svg`;     
+        room.src = './../assets/steppable/' + BaseConfig.getInstance().parseNameFromSource(room.src) + '.svg';
         await room.draw();
     }
 

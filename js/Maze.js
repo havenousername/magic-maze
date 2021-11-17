@@ -34,7 +34,7 @@ class Maze {
     #players;
     #currentPlayer;
 
-    constructor(canvasId, playerNumber = 2) {
+    constructor(canvasId, playersConfig) {
         if (!canvasId) {
             throw new InvalidArgumentException("canvas id is undefined");
         }
@@ -51,33 +51,37 @@ class Maze {
         }
         this.#canvasContext = this.#canvas.getContext("2d");
         this.#canvasContext.save();
-        this.initCanvas();
+        this.initMaze(playersConfig);
+        
+
+        // console.log(this.#rooms.map(i => i.map(j => [j.id, j])));
+    }  
+
+
+    async initMaze(playersConfig) {
+        await this.initCanvas();
 
         this.#roomSize = (Maze.SIZE) / Maze.MAZE_SIZE;
         this.#rooms = Array(Maze.MAZE_SIZE).fill(Array(Maze.MAZE_SIZE).fill(false));
-        this.initRooms();
-        this.initCurrentRoom();
+        await this.initRooms();
+        await this.initCurrentRoom();
 
         this.#arrows = Array(Maze.ARROWS_SIZE).fill(false);
-        this.initArrows();
+        await this.initArrows();
 
-        this.#players = Array(playerNumber).fill(false);
         this.addkeyboardEventListeners();
         this.rotateOnClickCurrentRoom();
 
-        this.initPlayers();
-
-        // console.log(this.#rooms.map(i => i.map(j => [j.id, j])));
-        
+        await this.initPlayers(playersConfig);
         setTimeout(() => {
             this.#currentPlayer = this.#players[1];
         });
-    }  
+    }
 
-    async initPlayers() {
+    async initPlayers(playersConfig) {
         const cornerRooms = [this.leftTopRoom, this.rightBotttomRoom, this.leftBottomRoom, this.rightTopRoom];
-        this.#players = this.#players.map((_, index) => {
-            const src = Object.values(BaseConfig.getInstance().getPlayersSrc())[index];
+        this.#players = playersConfig.map((player, index) => {
+            const src = player.src;
             const currentRoom = cornerRooms[index];
             return new Player(
                 new MazeObject({
@@ -86,12 +90,15 @@ class Maze {
                     canvasContext: this.#canvasContext,
                     rotation: 0,
                 }),
+                player.name,
                 this.boundsPlayer, 
                 this.#canvas,
                 currentRoom,
                 this
             );
         });
+
+        console.log(this.#players, playersConfig);
 
         this.#players.map(async player => await player.draw());
     }

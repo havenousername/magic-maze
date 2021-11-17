@@ -2,4 +2,5 @@
 <path d="M146.5 3.5H3.5V146.5H146.5V3.5Z" fill="#1B2021" stroke="#467076" stroke-width="7"/>
 <path d="M105 53H45V143H105V53Z" fill="#5F939A"/>
 <path d="M143 104V44L7 44V104H143Z" fill="#5F939A"/>
+<rect x="58" y="58" width="34" height="34" rx="17" fill="#D8AC9C"/>
 </svg>
