@@ -69,7 +69,6 @@ class MenuPage extends Page {
     }
 
     render() {
-        console.log('render menu page');
         document.getElementById(this.#htmlIds.wrapper).classList.remove('hidden');
     }
 

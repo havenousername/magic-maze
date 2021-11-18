@@ -13,12 +13,15 @@ class MazeObjectMovable {
     }
 
     async move(x,y, clear) {
-        clear(this.startPoint.x - 1, this.startPoint.y - 1, this.position.width + 1, this.position.height + 1);
+        if (clear) {
+            clear(this.startPoint.x - 1, this.startPoint.y - 1, this.position.width + 1, this.position.height + 1);    
+        }
+
         this.#mazeObject.changePosition(new Position(this.position.width, this.position.height, x, y));
         await this.#mazeObject.draw();
     }
 
-    async resetPosition(clear) {
+    async rollbackMove(clear) {
         if (this.position.isEqual(this.#previousPosition)) {
             return;
         }

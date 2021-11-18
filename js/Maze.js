@@ -33,6 +33,8 @@ class Maze {
     #arrows;
     #players;
     #currentPlayer;
+    #playerIndex;
+    #lastModifiableSection;
 
     constructor(canvasId, playersConfig) {
         if (!canvasId) {
@@ -44,7 +46,8 @@ class Maze {
         if (!canvas) {
             throw new NullUndefinedValueException("such element doesnt exist in canvas");
         }
-
+        this.#playerIndex = 0;
+        this.#lastModifiableSection = [];
         this.#canvas = canvas;
         if (!this.#canvas.getContext) {
             throw new NullUndefinedValueException("canvas doesnt contain 2d context");
@@ -74,7 +77,7 @@ class Maze {
 
         await this.initPlayers(playersConfig);
         setTimeout(() => {
-            this.#currentPlayer = this.#players[1];
+            this.#currentPlayer = this.#players[this.#playerIndex];
         });
     }
 
@@ -97,8 +100,6 @@ class Maze {
                 this
             );
         });
-
-        console.log(this.#players, playersConfig);
 
         this.#players.map(async player => await player.draw());
     }
@@ -202,7 +203,7 @@ class Maze {
         this.#canvasContext.fillRect(Maze.OUTER_SIZE, Maze.OUTER_SIZE, this.#canvas.width - 2 * Maze.OUTER_SIZE, this.#canvas.height - 2 * Maze.OUTER_SIZE);
     }
 
-    changeCurrentMove(direction, position) { 
+    async changeCurrentMove(direction, position) { 
         const isVertical = direction === Direction.TOP || Direction.BOTTOM === direction;
         const modifiableSection = isVertical ? this.takeRoomsRow(position) : this.takeRoomsColumn(position);
 
@@ -217,8 +218,15 @@ class Maze {
 
         this.#currentRoom.stepMove(direction, this.clearSection);
         const lastMoving = direction === Direction.BOTTOM || direction === Direction.RIGHT ? modifiableSection[modifiableSection.length - 1] : modifiableSection[0];
+        
+        
+        if (lastMoving.mazeObject.players.length > 0) {
+            this.#currentRoom.mazeObject.addPlayers(lastMoving.mazeObject.players);
+            lastMoving.mazeObject.removePlayers();
+        }
 
         const modifiableIds = modifiableSection.map(i => i.id);
+
         let previous; 
         const newModifiable = modifiableSection.map((room, index) => {
             if (modifiableIds.includes(room.id)  && (direction === Direction.TOP || direction === Direction.LEFT)) {
@@ -241,6 +249,18 @@ class Maze {
             }
         }); 
 
+        const newModifiableIds = newModifiable.map(i => i.id);
+
+        const isSameAction = this.#lastModifiableSection.filter((i, index) => i === newModifiableIds[index]).length === newModifiableIds.length;
+
+        if (isSameAction) {
+            this.#currentRoom.rollbackMove(this.clearSection);
+            modifiableSection.map(room => room.rollbackMove(this.clearSection));
+            return false;
+        }
+
+        this.#lastModifiableSection = modifiableIds; 
+
         this.#rooms = this.#rooms.map((rooms, rowIndex) => rooms.map((room, index) => {
             let ind = modifiableSection.findIndex(i => i.id === room.id);
             if (ind !== -1) {
@@ -251,6 +271,7 @@ class Maze {
         }));
         
         this.#currentRoom = lastMoving;
+        return true;
     }
 
     takeRoomsRow(row) {
@@ -312,6 +333,10 @@ class Maze {
 
         })
     }
+    
+    get nextPlayer() {
+        return this.#players[(this.#playerIndex + 1) % (this.#players.length)];
+    }
 
     get transposedRooms() {
         return this.#rooms.reduce((m, r) => (r.forEach((v, i) => (m[i] ??= [], m[i].push(v))), m), []);
@@ -359,6 +384,11 @@ class Maze {
 
     get currentPlayer() {
         return this.#currentPlayer;
+    }
+
+    set currentPlayer(player) {
+        this.#currentPlayer = player;
+        this.#playerIndex = (this.#playerIndex + 1) % (this.#players.length);
     }
 }
 

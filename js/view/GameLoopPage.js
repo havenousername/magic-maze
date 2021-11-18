@@ -3,6 +3,7 @@ import { Page } from "./Page.js";
 
 class GameLoopPage extends Page {
     #game;
+    #htmlIds;
     constructor(game) {
         super();
         this.#game = game;

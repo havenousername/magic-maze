@@ -134,7 +134,6 @@ class ConfigureGamePage extends Page {
     }
 
     render() {
-        console.log('configure game page')
         document.getElementById(this.#htmlIds.wrapper).classList.remove('hidden');
     }
 

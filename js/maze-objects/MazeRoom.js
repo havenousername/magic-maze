@@ -1,23 +1,26 @@
 import { BaseConfig } from "../BaseConfig.js";
-import { Coordinate } from "../constants/coordinate.js";
 import { Direction } from "../constants/direction.js";
 import { Rotations } from "../constants/rotations.js";
-import { AppException } from "../exceptions/AppException.js";
+import { StepStage } from "../constants/step-stage.js";
 import { MazeRoomShift } from "../util/MazeRoomShift.js";
 import { Point } from "../util/Point.js";
-import { Position } from "../util/Position.js";
 import { MazeObject } from "./MazeObject.js";
 
 
 class MazeRoom extends MazeObject {
     #skelethonePoints;
     #mazeShifter;
+    #maze;
+    #players;
 
     constructor({ src, position, canvasContext, rotation }, maze) {
         super({ src, position, canvasContext, rotation });
         this.#skelethonePoints = [];
         this.#mazeShifter = new MazeRoomShift(maze, this);
+        this.#maze = maze;
         this.#initSketethonePoints();
+        this.addClickListener();
+        this.#players = [];
     }
 
     #initSketethonePoints() {
@@ -147,6 +150,13 @@ class MazeRoom extends MazeObject {
         return rotationAssoc[direction]();
     }
 
+    async draw() {
+        await super.draw();
+
+        const playersMove = this.players.map(player => player.moveToRoom());
+        await Promise.all(playersMove);
+    }
+
     getNeighbours(getArray = true) {
         if (getArray) {
             return [
@@ -185,18 +195,81 @@ class MazeRoom extends MazeObject {
         return availableNeighbours;
     }
 
+    addClickListener() {
+        document.addEventListener('click', e => {
+            const allowEventExecution = BaseConfig
+                .getInstance()
+                .allowEventExecution(
+                    e, 
+                    this.startPoint, 
+                    this.endPoint
+                );
+            
+            if (allowEventExecution) {
+                const currentPlayer = this.#maze.currentPlayer;
+                if (currentPlayer.stage === StepStage.SLIDE || !currentPlayer.active) {
+                    return;
+                }
+
+                if (currentPlayer.isRoomSteppable(this)) {
+                    const eventInsidePlayer = BaseConfig
+                    .getInstance()
+                    .allowEventExecution(
+                        e, 
+                        currentPlayer.startPoint, 
+                        currentPlayer.endPoint
+                    );
+                    if (eventInsidePlayer) {
+                        return;
+                    }
+                    currentPlayer.changeRoom(this);
+                    this.#maze.currentPlayer = this.#maze.nextPlayer;
+                }
+            }
+        })
+    }
+
     get skelethone() {
         return this.#skelethonePoints;
     } 
 
     changePosition(position) {
-        super.changePosition(position);
+        super.changePosition(position);    
         this.initSketethonePoints();
     }
 
     changeRotation(rotation) {
         super.changeRotation(rotation);
         this.initSketethonePoints();
+    }
+
+    hasPlayer(player) {
+        return this.#players.find(p => player.id === p.id);
+    }
+
+    addPlayer(player) {
+        if (this.hasPlayer(player)) {
+            return;
+        }
+        player.addRoom(this);
+        this.#players.push(player);
+    }
+
+    removePlayer(playerId) {
+        this.#players = this.#players.filter(p => p.id !== playerId);
+    }
+
+    removePlayers() {
+        this.#players = [];
+    }
+
+    addPlayers(players) {
+        players.map(player => this.addPlayer(player));
+    }
+
+
+    get players() {
+        return this.#players;
     }
 }
 

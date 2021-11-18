@@ -66,7 +66,6 @@ class StatisticsPage extends Page {
     }
 
     render() {
-        console.log('render statistics page');
         document.getElementById(this.#htmlIds.wrapper).classList.remove('hidden');
     }
 

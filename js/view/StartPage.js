@@ -63,7 +63,6 @@ class StartPage extends Page {
     }
 
     render(request) {
-        console.log('render start page');
         document.getElementById(this.#startScreenDivIds.wrapper).classList.remove('hidden');
     }
 

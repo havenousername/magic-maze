@@ -11,7 +11,6 @@ class Page {
     }
 
     handle(request) {
-        console.log(this.#nextPages);
         for (const nextPage of this.#nextPages) {
             const handler = nextPage.handle(request);
             if (handler) {

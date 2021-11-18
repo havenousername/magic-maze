@@ -1,27 +1,36 @@
 import { BaseConfig } from "../BaseConfig.js";
 import { MazeObjectMovable } from "./MazeObjectMovable.js";
+import { StepStage } from "../constants/step-stage.js";
 
 class Player extends MazeObjectMovable {
     #canvas;
     #name;
     #room;
     #previousSrc;
-    #map;
+    #maze;
     #roomSrc;
     #active;
     #prevSources; 
+    #stage;
+    #steppableRooms;
 
     constructor(mazeObject, name, positionLimit, canvas, room, map) {
         super(mazeObject, positionLimit);
         this.#canvas = canvas;
         this.#name = name;
-        this.#room = room;
-        this.#map = map;
+        room.addPlayer(this);
+        this.#maze = map;
         this.#roomSrc = BaseConfig.getInstance().parseNameFromSource(room.src);
         this.#previousSrc = this.src;
         this.#active = false;
         this.#prevSources = [];
+        this.#stage = StepStage.SLIDE; 
+        this.#steppableRooms = [];
         this.activateClickListener();
+    }
+
+    async draw() {
+        await super.draw();
     }
 
 
@@ -34,11 +43,12 @@ class Player extends MazeObjectMovable {
                     this.startPoint, 
                     this.endPoint
                 );
-            if (allowEventExecution && this.#map.currentPlayer.id === this.id) {
+            if (allowEventExecution && this.#maze.currentPlayer.id === this.id && this.#stage === StepStage.MOVE) {
                 this.#active = !this.#active;
 
                 if (this.#active) {
                     const neighbours = this.#room.calculateValidNeighbours();
+                    this.#steppableRooms = neighbours;
                     [...neighbours].map(async neighbour => {
                         await this.#onActiveChangeSrc(neighbour);
                     });
@@ -48,17 +58,14 @@ class Player extends MazeObjectMovable {
                     this.applyPreviousSources();
                     this.#room.src =  './../assets/' + this.#roomSrc + '.svg';
                 }   
-                await this.#room.draw();     
-                await this.draw();
+                await this.#room.draw();
             }
         });
     } 
 
-
-
     async applyPreviousSources() {
         this.#prevSources.map(async source => {
-            const room = this.#map.flatRooms.find(room => room.id === source.id);    
+            const room = this.#maze.flatRooms.find(room => room.id === source.id);    
             if (room) {
                 room.src = source.src;
                 room.draw();
@@ -67,6 +74,7 @@ class Player extends MazeObjectMovable {
     }
 
     async #onActiveChangeSrc(room) {
+        console.log(room);
         this.#prevSources.push({ id: room.id, src: room.src });
         room.src = './../assets/steppable/' + BaseConfig.getInstance().parseNameFromSource(room.src) + '.svg';
         await room.draw();
@@ -76,16 +84,57 @@ class Player extends MazeObjectMovable {
         return this.#room;
     }
 
+    set room(room) {
+        room.addPlayer(this);
+    }
+
+    addRoom(room) {
+        this.#room = room;
+        this.#roomSrc = BaseConfig.getInstance().parseNameFromSource(room.src);
+    }
+
     get name() {
         return this.#name;
     }
 
     get map() {
-        return this.#map;
+        return this.#maze;
     }
 
-    changeRoom() {
-        
+    get stage() {
+        return this.#stage;
+    }
+
+    set stage(stage) {
+        this.#stage = stage;
+    }
+
+    get active() {
+        return this.#active;
+    }
+
+    get steppableRooms() {
+        return [...this.#steppableRooms, this.#room];
+    }
+
+    isRoomSteppable(room) {
+        return this.steppableRooms.find(r => r.id === room.id);
+    }
+    
+    async moveToRoom() {
+        await this.move(this.room.center.x - 35 / 2, this.room.center.y - 35 /2);
+    }
+
+    async changeRoom(room) {
+        this.#room.src = './../assets/' + this.#roomSrc + '.svg';
+        this.#room.removePlayer(this.id);
+        this.applyPreviousSources();
+        this.room.draw();
+        this.room = room;
+        this.moveToRoom();
+        this.room.draw();
+        this.#roomSrc = BaseConfig.getInstance().parseNameFromSource(room.src);
+        this.#stage = StepStage.SLIDE;
     }
 }
 

@@ -1,6 +1,7 @@
 import { BaseConfig } from "../BaseConfig.js";
 import { Direction } from "../constants/direction.js";
 import { Rotations } from "../constants/rotations.js";
+import { StepStage } from "../constants/step-stage.js";
 import { MazeObjectMovable } from "./MazeObjectMovable.js";
 
 class ArrowObject extends MazeObjectMovable {
@@ -40,7 +41,7 @@ class ArrowObject extends MazeObjectMovable {
                     this.hasIntersectActiveRoom() && this.isLocatedCloseToActiveRoom()
                 );
 
-            if (allowEventExecution) {    
+            if (allowEventExecution && this.#maze.currentPlayer.stage === StepStage.SLIDE) {    
                 const associateRotation = {
                     [Rotations.LEFT]: Direction.RIGHT,
                     [Rotations.RIGHT]: Direction.LEFT,
@@ -49,7 +50,10 @@ class ArrowObject extends MazeObjectMovable {
                 };
 
                 // console.log(associateRotation[this.rotation], this.#arrayPosition);
-                this.#maze.changeCurrentMove(associateRotation[this.rotation], this.#arrayPosition);
+                const changed = this.#maze.changeCurrentMove(associateRotation[this.rotation], this.#arrayPosition);
+                if (changed) {
+                    this.#maze.currentPlayer.stage = StepStage.MOVE;
+                }
             }
         });
     }

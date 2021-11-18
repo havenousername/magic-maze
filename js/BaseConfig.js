@@ -19,7 +19,7 @@ const BaseConfig = (function() {
                 {rotation: Rotations.BOTTOM, src: 1}, 
                 {rotation: Rotations.BOTTOM, src: 2}, 
                 {rotation: Rotations.BOTTOM, src: 2},
-                {rotation: Rotations.RIGHT, src: 1}
+                {rotation: Rotations.LEFT, src: 1}
             ],
             [
                 {rotation: Rotations.LEFT, src: 2}, 
@@ -34,7 +34,7 @@ const BaseConfig = (function() {
                 {rotation: Rotations.RIGHT, src: 2}
             ],
             [
-                {rotation: Rotations.LEFT, src: 1}, 
+                {rotation: Rotations.RIGHT, src: 1}, 
                 {rotation: Rotations.TOP, src: 2}, 
                 {rotation: Rotations.TOP, src: 2}, 
                 {rotation: Rotations.TOP, src: 1}
@@ -103,7 +103,7 @@ const BaseConfig = (function() {
                 return isClickedX && isClickedY && condition;
             },
             parseNameFromSource(src) {
-                return src.split('/')[2].split('.')[0];
+                return src.split('assets/')[1].split('.')[0];
             },
             takeSelectedSrc(src) {
                 return createImagePath(this.parseNameFromSource(src) + '-selected');
