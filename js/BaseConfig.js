@@ -51,6 +51,13 @@ const BaseConfig = (function() {
             return child;
          };
 
+         Object.defineProperty(String.prototype, 'capitalize', {
+            value: function() {
+              return this.charAt(0).toUpperCase() + this.slice(1);
+            },
+            enumerable: false
+          });
+
         Document.prototype.createElementFromString = createElementFromString;
         let playersSrc = {
             king: createImagePath('king'),
@@ -107,6 +114,13 @@ const BaseConfig = (function() {
             },
             takeSelectedSrc(src) {
                 return createImagePath(this.parseNameFromSource(src) + '-selected');
+            },
+            formaTimeToMS(diff) {
+                const seconds = Math.round((diff / 1000) % 59);
+                const minutes = Math.round(diff / (1000 * 60));
+                const hasMinutes = minutes > 0;
+
+                return `${hasMinutes ? minutes : '00'}:${seconds < 10 ? `0${seconds}` : seconds}`;
             }
         }
     }

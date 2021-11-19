@@ -13,6 +13,7 @@ import { ArrayUtility } from "./util/ArrayUtility.js";
 import { BaseConfig } from "./BaseConfig.js";
 import { Player } from "./maze-objects/Player.js";
 import { MazeObject } from "./maze-objects/MazeObject.js";
+import { Treasure } from "./maze-objects/Treasure.js";
 
 
 class Maze {
@@ -35,8 +36,12 @@ class Maze {
     #currentPlayer;
     #playerIndex;
     #lastModifiableSection;
+    #step;
 
-    constructor(canvasId, playersConfig) {
+    #treasures;
+    #parent;
+
+    constructor(canvasId, playersConfig, treasuresSources, parent) {
         if (!canvasId) {
             throw new InvalidArgumentException("canvas id is undefined");
         }
@@ -48,20 +53,22 @@ class Maze {
         }
         this.#playerIndex = 0;
         this.#lastModifiableSection = [];
+        this.#players = [];
         this.#canvas = canvas;
+        this.#parent = parent;
         if (!this.#canvas.getContext) {
             throw new NullUndefinedValueException("canvas doesnt contain 2d context");
         }
         this.#canvasContext = this.#canvas.getContext("2d");
         this.#canvasContext.save();
-        this.initMaze(playersConfig);
-        
+        this.initMaze(playersConfig, treasuresSources);
+        this.#step = 0;
 
         // console.log(this.#rooms.map(i => i.map(j => [j.id, j])));
     }  
 
 
-    async initMaze(playersConfig) {
+    async initMaze(playersConfig, treasuresSources) {
         await this.initCanvas();
 
         this.#roomSize = (Maze.SIZE) / Maze.MAZE_SIZE;
@@ -76,11 +83,56 @@ class Maze {
         this.rotateOnClickCurrentRoom();
 
         await this.initPlayers(playersConfig);
+        await this.initTreasures(treasuresSources);
         setTimeout(() => {
             this.#currentPlayer = this.#players[this.#playerIndex];
+            this.#parent.changeCurrentPlayer(this.#currentPlayer);
         });
     }
 
+    async initTreasures(treasuresSources) {
+        this.#treasures = treasuresSources.map((treasure, index) => {
+            let insertRoomIndex = Math.round(Math.random() * (this.flatRooms.length - 1));
+            let insertRoom = this.flatRooms[insertRoomIndex];
+            while (this.isCornerRoom(insertRoom)) {
+                insertRoomIndex = Math.round(Math.random() * (this.flatRooms.length - 1));
+                insertRoom = this.flatRooms[insertRoomIndex];
+            }
+            const playerIndex = index % this.#players.length; 
+            const player = this.#players[playerIndex];
+
+            return new Treasure(
+                new MazeObject({
+                    src: treasure,
+                    position: new Position(20, 20, insertRoom.center.x - 20 / 2, insertRoom.center.y - 20 / 2),
+                    canvasContext: this.#canvasContext,
+                    rotation: 0,
+                }),
+                { 
+                    room: insertRoom,
+                    player,
+                    isHunted: index < this.#players.length 
+                }
+            );
+        });
+
+        console.log(this.#treasures);
+
+        const drawTreasures = this.#treasures.map(t => t.draw());
+        await Promise.all(drawTreasures);
+    }
+
+    isCornerRoom(room) {
+        const cornerRooms = [
+            this.leftTopRoom, 
+            this.rightBotttomRoom, 
+            this.leftBottomRoom, 
+            this.rightTopRoom
+        ];
+        console.log('check room');
+        return !!(cornerRooms.find(r => r.id === room.id));
+    }
+ 
     async initPlayers(playersConfig) {
         const cornerRooms = [this.leftTopRoom, this.rightBotttomRoom, this.leftBottomRoom, this.rightTopRoom];
         this.#players = playersConfig.map((player, index) => {
@@ -290,7 +342,7 @@ class Maze {
                 'ArrowLeft': Direction.LEFT,
                 'ArrowRight': Direction.RIGHT,
             }
-
+            e.preventDefault();
             this.#currentRoom.stepMove(codeAssociation[e.code], this.clearSection, this.hasRoomOnPosition).catch(err => {
                 if (err instanceof WrongDirectionException) {}
                 else {
@@ -389,6 +441,27 @@ class Maze {
     set currentPlayer(player) {
         this.#currentPlayer = player;
         this.#playerIndex = (this.#playerIndex + 1) % (this.#players.length);
+        this.#parent.changeCurrentPlayer(player);
+    }
+
+    get players() {
+        return this.#players;
+    }
+
+    get isGameOver() {
+        return !!(this.#players.find(pl => pl.isFinished));
+    }
+
+    get winner() {
+        return (this.#players.find(pl => pl.isFinished));
+    }
+
+    get step() {
+        return this.#step;
+    }
+
+    incrementStep() {
+        this.#step = this.#step + 1;
     }
 }
 

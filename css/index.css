@@ -47,6 +47,10 @@
     color: #1B2021;
 }
 
+.text-secondary {
+    color: #5F939A;
+}
+
 .btn-primary {
     width: 100%;
     
@@ -81,4 +85,37 @@
     z-index: 0;
     top: 50%;
     transform: translate(-45%, -55%);
+}
+
+.treasure-card {
+    width: 11.25rem;
+    height: 7rem;
+    background-color: #EAC8AF;
+    box-shadow: 0px 7px 4px rgba(0, 0, 0, 0.25);
+    border-radius: 22px;
+    position: relative;
+    z-index: 1;
+}
+
+.treasure-wrapper {
+    position: relative;
+}
+
+.treasure-wrapper::before {
+    content: '';
+    background-color: #EAC8AF;
+    width: 11.25rem;
+    height: 7rem;
+    position: absolute;
+    right: -7px;
+    bottom: 37px;
+    z-index: -2;
+    border-radius: 22px;
+    box-shadow: 0px 7px 4px rgba(0, 0, 0, 0.25);
+}
+
+
+.canvas-section {
+    width: 100%;
+    max-width: 900px;
 }

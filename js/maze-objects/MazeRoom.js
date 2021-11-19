@@ -12,6 +12,7 @@ class MazeRoom extends MazeObject {
     #mazeShifter;
     #maze;
     #players;
+    #treasure;
 
     constructor({ src, position, canvasContext, rotation }, maze) {
         super({ src, position, canvasContext, rotation });
@@ -21,6 +22,7 @@ class MazeRoom extends MazeObject {
         this.#initSketethonePoints();
         this.addClickListener();
         this.#players = [];
+        this.#treasure = null;
     }
 
     #initSketethonePoints() {
@@ -153,6 +155,10 @@ class MazeRoom extends MazeObject {
     async draw() {
         await super.draw();
 
+        if (this.#treasure) {
+            await this.#treasure.moveToRoom();
+        }
+
         const playersMove = this.players.map(player => player.moveToRoom());
         await Promise.all(playersMove);
     }
@@ -265,6 +271,20 @@ class MazeRoom extends MazeObject {
 
     addPlayers(players) {
         players.map(player => this.addPlayer(player));
+    }
+
+    
+    addTreasure(treasure) {
+        this.#treasure = treasure; 
+    }
+
+    async removeTreasure() {
+        this.#treasure = null;
+        await this.draw();
+    }
+
+    get treasure() {
+        return this.#treasure;
     }
 
 

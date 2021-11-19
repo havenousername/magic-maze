@@ -9,11 +9,15 @@
     <title>Maze Game</title>
 </head>
 <body class="w-full h-full body bg-primary">
-    <section class="h-full flex justify-center items-center">
-        <canvas id="game-canvas" width="512" height="512">
-            <h1>Your browser does not support Canvas API. Please upgrade to a newer version</h1>
-        </canvas>
-    </section>
+    <main class="flex justify-evenly">
+        <section class="h-full flex justify-center items-center canvas-section">
+            <canvas id="game-canvas" width="512" height="512">
+                <h1>Your browser does not support Canvas API. Please upgrade to a newer version</h1>
+            </canvas>
+        </section>
+        <div id="content"></div>
+    </main>
+    
     <script type="module" src="./js/main.js" ></script>
 </body>
 </html>

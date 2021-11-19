@@ -13,6 +13,11 @@ class Player extends MazeObjectMovable {
     #prevSources; 
     #stage;
     #steppableRooms;
+    #collectedTreasures;
+    #assignedTreasures;
+    #score
+    #startRoomId;
+    #finished;
 
     constructor(mazeObject, name, positionLimit, canvas, room, map) {
         super(mazeObject, positionLimit);
@@ -25,7 +30,12 @@ class Player extends MazeObjectMovable {
         this.#active = false;
         this.#prevSources = [];
         this.#stage = StepStage.SLIDE; 
+        this.#startRoomId = room.id;
         this.#steppableRooms = [];
+        this.#collectedTreasures = [];
+        this.#assignedTreasures = [];
+        this.#score = 0;
+        this.#finished = false;
         this.activateClickListener();
     }
 
@@ -74,7 +84,6 @@ class Player extends MazeObjectMovable {
     }
 
     async #onActiveChangeSrc(room) {
-        console.log(room);
         this.#prevSources.push({ id: room.id, src: room.src });
         room.src = './../assets/steppable/' + BaseConfig.getInstance().parseNameFromSource(room.src) + '.svg';
         await room.draw();
@@ -126,6 +135,9 @@ class Player extends MazeObjectMovable {
     }
 
     async changeRoom(room) {
+        if (room.id === this.#startRoomId && this.completedTreasures) {
+            this.#finished = true;
+        }
         this.#room.src = './../assets/' + this.#roomSrc + '.svg';
         this.#room.removePlayer(this.id);
         this.applyPreviousSources();
@@ -134,9 +146,62 @@ class Player extends MazeObjectMovable {
         this.moveToRoom();
         this.room.draw();
         this.#roomSrc = BaseConfig.getInstance().parseNameFromSource(room.src);
+        this.collectTreasure(room);
         this.#stage = StepStage.SLIDE;
     }
-}
+
+    associateTreasure(treasure) {
+        this.#assignedTreasures.push(treasure);
+    }
+
+    associatedTreasureIndex(treasure) {
+        if (!treasure) return -1;
+        return this.#assignedTreasures.findIndex(t => t.id === treasure.id);
+    }
+
+    collectTreasure(room) {
+        console.log('collect treasure');
+        const treasureIndex = this.associatedTreasureIndex(room.treasure);
+
+        if (treasureIndex === -1) {
+            return;
+        }
+
+        const movingTreasure = this.#assignedTreasures[treasureIndex];
+        if (!movingTreasure.isHunted) {
+            return;
+        }
+
+        this.#assignedTreasures = this.#assignedTreasures.filter(tr => tr.id !== movingTreasure.id);
+        movingTreasure.collect();
+        this.#collectedTreasures.push(movingTreasure);
+        this.#score += movingTreasure.points;
+
+        if (this.#assignedTreasures.length > 0) {
+            this.#assignedTreasures[0].makeHuntable();
+        }
+    }
+
+    get completedTreasures() {
+        return this.#assignedTreasures.length === 0 && this.#collectedTreasures.length > 0;
+    }
+
+    get huntedTreasure() {
+        return this.#assignedTreasures.find(tr => tr.isHunted);
+    }
+
+    get score() {
+        return this.#score;
+    }
+
+    get treasuresLeft() {
+        return this.#assignedTreasures.length;
+    }
+
+    get isFinished() {
+        return this.#finished;
+    }
+} 
 
 
 export { Player }

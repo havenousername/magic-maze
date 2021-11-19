@@ -52,7 +52,11 @@ class Game {
 
         this.#startPage.handle(this);
 
-        this.#maze = new Maze(this.#gameCanvas, this.#configurePage.players);
+        this.players = this.#configurePage.players;
+    }
+    
+    get gameCanvas() {
+        return this.#gameCanvas;
     }
 
     get stage() {
@@ -70,7 +74,15 @@ class Game {
 
     set players(players) {
         this.#players = players;
-        this.#maze = new Maze(this.#gameCanvas, players);
+        this.#gameLoop.initMaze();
+    }
+
+    get gameOver() {
+        return this.#gameOver;
+    }
+
+    set gameLoop(gameLoop) {
+        this.gameLoop = gameLoop;
     }
 }
 

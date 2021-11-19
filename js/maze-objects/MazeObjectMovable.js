@@ -89,8 +89,20 @@ class MazeObjectMovable {
         return this.#mazeObject.getNeighbour(direction);
     }
 
+    addTreasure(treasure) {
+        this.#mazeObject.addTreasure(treasure);
+    }
+
+    removeTreasure() {
+        this.#mazeObject.removeTreasure();
+    }
+
     calculateValidNeighbours(previousNeighbours) {
         return this.#mazeObject.calculateValidNeighbours(previousNeighbours);
+    }
+
+    get treasure() {
+        return this.#mazeObject.treasure;
     }
  
     get skelethone() {
