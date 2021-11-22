@@ -14,6 +14,7 @@ class GameLoopPage extends Page {
     #time;
     #diff;
     #gameOver;
+    #generatedStats;
     
 
     constructor(game, parentId = 'content') {
@@ -33,6 +34,7 @@ class GameLoopPage extends Page {
         this.diff = new Date().getTime();
         this.#gameOver = false;
         this.#parentId = parentId;
+        this.#generatedStats = false;
     }
 
     #gameCallback = () => {
@@ -48,21 +50,31 @@ class GameLoopPage extends Page {
         if (!playerMoveElem) return;
         playerMoveElem.innerHTML = player.name;
 
-        if (this.winner) {
-            this.#goToGameOver();
+        if (this.#maze.winner) {
+            this.#goToGameOver(this.#maze.winner);
+            return;
+        }
+        
+        if (!this.#generatedStats) {
+            this.generatePlayersStats(this.#maze.players);
         }
         this.#maze.players.map(pl => this.#changePlayerView(pl));        
     }
 
-    #goToGameOver() {
-        const winner = this.#maze.winner;
+    #goToGameOver(winner) {
         console.log(winner);
-        this.#game.gameOver.winner = player;
+        this.#game.gameOver.winner = winner;
         this.#game.gameOver.time = this.#diff;
         this.#game.stage = GameStage.GAME_OVER;
         this.#gameOver = true;
-        document.getElementById(this.#htmlIds.wrapper).classList.add('hidden');
-        document.getElementById(this.#htmlIds.stats).classList.add('hidden');
+        this.#resetDocument();
+    }
+
+    // TODO check later object removal
+    #resetDocument() {
+        this.#maze.destroy();
+        document.getElementById(this.#htmlIds.wrapper).remove();
+        document.getElementById(this.#htmlIds.stats).remove();
     }
 
     
@@ -113,10 +125,22 @@ class GameLoopPage extends Page {
         );
 
         document.getElementById(this.#htmlIds.wrapper).classList.add('hidden');
+
+
+        document.getElementById(this.#htmlIds.goBackBtn).addEventListener('click', () => {
+            this.#game.stage = GameStage.GAME_CONFIG;
+            this.#resetDocument();
+        });
     }
 
     generatePlayersStats(players) {
-        let playerStats = players.map(player => `
+        if (players.length === 0) {
+            return;
+        }
+
+        let playerStats = players.map(player =>{ 
+            // console.log(player.huntedTreasure.src)
+            return `
             <div id="${player.name}-wrapper" class="treasure-wrapper py-2">
                 <div class="flex justify-between pb-3">
                     <div class="flex">
@@ -138,7 +162,7 @@ class GameLoopPage extends Page {
                     <h4 class="text-xl text-white" id="${this.#htmlIds.gameLoop}-${player.name}-left">${player.treasuresLeft}</h4>
                 </div>
             </div>
-        `).join(' ');
+        `}).join(' ');
 
         playerStats = `
             <div id="${this.#htmlIds.stats}" class="flex flex-col justify-around">
@@ -146,6 +170,7 @@ class GameLoopPage extends Page {
             </div>
         `;
         document.getElementById(this.#parentId).appendChild(document.createElementFromString(playerStats));
+        this.#generatedStats = true;
     }
 
     #createFormattedTime(diff) {
@@ -173,25 +198,17 @@ class GameLoopPage extends Page {
     }
 
     initMaze() {
-        console.log('init maze')
-        const treasures = [
-            "./assets/treasures/ball.svg",
-            "./assets/treasures/bomb.svg",
-            "./assets/treasures/cat.svg",
-            "./assets/treasures/puzzle.svg",
-
-        ];
-        this.#maze = new Maze(this.#game.gameCanvas, this.#game.players, treasures, this);
+        this.#maze = new Maze(this.#game.gameCanvas, this.#game.players, this.#game.treasures, this);
         this.#time = new Date();
         this.render();
 
-        setTimeout(() => {
-            if (!document.getElementById(this.#htmlIds.stats)) {
-                this.generatePlayersStats(this.#maze.players);
-            } else {
-                document.getElementById(this.#htmlIds.stats).classList.remove('hidden');
-            }
-        }, 100);
+    
+        if (!document.getElementById(this.#htmlIds.stats)) {
+            this.generatePlayersStats(this.#maze.players);
+        } else {
+            document.getElementById(this.#htmlIds.stats).classList.remove('hidden');
+        }
+        
     }
 }
 

@@ -4,7 +4,8 @@ const GameStage = {
     MENU: 4,
     STATISTICS: 5,
     GAME_LOOP: 2,
-    GAME_OVER: 3
+    GAME_OVER: 3,
+    INSTRUCTIONS: 6,
 };
 
 export { GameStage };

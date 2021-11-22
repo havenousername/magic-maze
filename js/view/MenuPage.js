@@ -10,7 +10,8 @@ class MenuPage extends Page {
         this.#htmlIds = {
             wrapper: "menu-page-wrapper",
             startGameBtn: "menu-page-game-start-btn",
-            statisticsBtn: "menu-page-statistics-btn"
+            statisticsBtn: "menu-page-statistics-btn",
+            electiveBtn: "menu-page-instructions",
         };
         this.generateScreen();
     }
@@ -24,7 +25,7 @@ class MenuPage extends Page {
             header: "Menu",
             startGameBtn: "New Game",
             statisticsBtn: "Statistics",
-            electiveBtn: "Game Rules Statistics"
+            electiveBtn: "Learn more about this Game Rules"
         };
 
         const elementText = `
@@ -43,7 +44,7 @@ class MenuPage extends Page {
                         </button>
                     </div>
                     <div style="max-width: 21.875rem;" class="w-full">
-                        <button class="italic border-b-4 border-secondary">${modalStrings.electiveBtn}</button>
+                        <button id="${this.#htmlIds.electiveBtn}" class="italic border-b-4 border-secondary">${modalStrings.electiveBtn}</button>
                     <div>
                     
                 </div>
@@ -66,6 +67,11 @@ class MenuPage extends Page {
             document.getElementById(this.#htmlIds.wrapper).classList.add('hidden');
             this.#game.stage = GameStage.STATISTICS;
         });
+
+        document.getElementById(this.#htmlIds.electiveBtn).addEventListener('click', () => {
+            document.getElementById(this.#htmlIds.wrapper).classList.add('hidden');
+            this.#game.stage = GameStage.INSTRUCTIONS;
+        })
     }
 
     render() {

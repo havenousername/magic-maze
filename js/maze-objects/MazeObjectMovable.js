@@ -76,6 +76,10 @@ class MazeObjectMovable {
         }
     }
 
+    removeListeners() {
+        this.#mazeObject.removeListeners();
+    }
+
     async rotate(degree) {
         this.#mazeObject.changeRotation(degree);
         this.draw();
@@ -97,8 +101,12 @@ class MazeObjectMovable {
         this.#mazeObject.removeTreasure();
     }
 
-    calculateValidNeighbours(previousNeighbours) {
-        return this.#mazeObject.calculateValidNeighbours(previousNeighbours);
+    calculateValidNeighbours(previousNeighbours, depth) {
+        return this.#mazeObject.calculateValidNeighbours(previousNeighbours, depth);
+    }
+
+    calculateSteppableNeighbours() {
+        return this.#mazeObject.calculateSteppableNeighbours();
     }
 
     get treasure() {

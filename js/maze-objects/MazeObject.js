@@ -53,7 +53,17 @@ class MazeObject {
             }
             image.src = this.#src;
         });
+    }
+
+    velx = 2;
+    vely = 2;
+
+    tempCenter;
+    tempHalfSize;
+
+    drawAnim() {
         
+        requestAnimationFrame(this.drawAnim);
     }
 
     changePosition(position) {

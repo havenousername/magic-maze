@@ -1,16 +1,15 @@
+import { BaseConfig } from "./BaseConfig.js";
 import { GameStage } from "./constants/game-stage.js"
-import { Maze } from "./Maze.js";
 import { ConfigureGamePage } from "./view/ConfigureGamePage.js";
 import { GameLoopPage } from "./view/GameLoopPage.js";
 import { GameOverPage } from "./view/GameOverPage.js";
 import { MenuPage } from "./view/MenuPage.js";
 import { StartPage } from "./view/StartPage.js";
 import { StatisticsPage } from "./view/StatisticsPage.js";
+import { InstructionsPage } from "./view/InstructionsPage.js";
 
 class Game {
     #stage;
-    #maze;
-
     #startPage;
     #menuPage;
     #configurePage;
@@ -19,6 +18,8 @@ class Game {
     #gameOver;
     #players;
     #gameCanvas;
+    #treasures;
+    #instructions;
 
 
     constructor(gameCanvas) {
@@ -28,6 +29,7 @@ class Game {
             gameBtn: 'start-screen-button-game',
         };
         this.#gameCanvas = gameCanvas;
+        this.#treasures = BaseConfig.getInstance().getTreasuresSrc().filter((_, ind) => ind < 2);
 
         this.#startPage = new StartPage(this, startScreenDivIds);
         this.#menuPage = new MenuPage(this);
@@ -35,24 +37,26 @@ class Game {
         this.#configurePage = new ConfigureGamePage(this);
         this.#gameLoop = new GameLoopPage(this);
         this.#gameOver = new GameOverPage(this);
+        this.#instructions = new InstructionsPage(this);
 
         this.initPages();
     }   
 
     initPages() {
         // TODO reset to start screen
-        this.#stage = GameStage.GAME_LOOP;
+        this.#stage = GameStage.START_SCREEN;
         this.#startPage.setNext(this.#menuPage);
         
         this.#menuPage.setNext(this.#statisticsPage);
         this.#menuPage.setNext(this.#configurePage);
+        this.#menuPage.setNext(this.#instructions);
 
         this.#configurePage.setNext(this.#gameLoop);
         this.#gameLoop.setNext(this.#gameOver);
 
         this.#startPage.handle(this);
 
-        this.players = this.#configurePage.players;
+        // this.players = this.#configurePage.players;
     }
     
     get gameCanvas() {
@@ -74,7 +78,16 @@ class Game {
 
     set players(players) {
         this.#players = players;
+        this.#gameLoop = new GameLoopPage(this);
         this.#gameLoop.initMaze();
+    }
+
+    get treasures() {
+        return this.#treasures;
+    }
+
+    set treasures(treasuresLength) {
+        this.#treasures = BaseConfig.getInstance().getTreasuresSrc().filter((_, ind) => ind < treasuresLength);
     }
 
     get gameOver() {

@@ -11,6 +11,37 @@ const BaseConfig = (function() {
         // private methods and variables
 
         let srcImages = ['../assets/room.svg', '../assets/bend-room.svg', '../assets/t-room.svg'];
+        const treasuresSrc = [
+            "ball.svg",
+            "bomb.svg",
+            "cards.svg",
+            "cat.svg",
+            "chest.svg",
+            "crown.svg",
+            "devil.svg",
+            "diamond.svg",
+            "dice.svg",
+            "flag.svg",
+            "game-controller.svg",
+            "gasoline.svg",
+            "gun.svg",
+            "logo.svg",
+            "map.svg",
+            "monster.svg",
+            "mushroom.svg",
+            "puzzle.svg",
+            "shield.svg",
+            "strategy.svg",
+            "target.svg",
+            "ufo.svg",
+            "vr.svg",
+            "wizard.svg"
+        ].map(treasure => `../assets/treasures/${treasure}`);
+
+
+        const STATISTICS_STORAGE = 'maze-game-statisctics'
+
+
         let mazeCanvasSize = 512;
         let offsetMazeCanvasSize = 150;
         let mazeSize = 7;
@@ -121,6 +152,12 @@ const BaseConfig = (function() {
                 const hasMinutes = minutes > 0;
 
                 return `${hasMinutes ? minutes : '00'}:${seconds < 10 ? `0${seconds}` : seconds}`;
+            },
+            getTreasuresSrc() {
+                return treasuresSrc;
+            },
+            getStatisticsLocalstorageName() {
+                return STATISTICS_STORAGE;
             }
         }
     }

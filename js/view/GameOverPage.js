@@ -72,7 +72,6 @@ class GameOverPage extends Page {
     }
 
     render() {
-        console.log('game over page');
         document.getElementById(this.#htmlIds.wrapper).classList.remove('hidden');
     }
 
@@ -99,6 +98,21 @@ class GameOverPage extends Page {
         `;
         document
         .getElementById(this.#htmlIds.winnerInfoPanel).innerHTML = str;
+
+        const prevLocalStorage = JSON.parse(localStorage.getItem(BaseConfig.getInstance().getStatisticsLocalstorageName())) ?? [];
+        const json = JSON.stringify([
+            ...prevLocalStorage,
+            {
+                name: this.#winner.name.capitalize(),
+                time: BaseConfig.getInstance().formaTimeToMS(this.#time),
+                src: this.#winner.src
+            }
+        ]);
+        
+
+        localStorage.setItem(BaseConfig.getInstance().getStatisticsLocalstorageName(), json);
+
+        console.log(localStorage.getItem(BaseConfig.getInstance().getStatisticsLocalstorageName()));
     }
 } 
 

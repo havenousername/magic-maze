@@ -14,9 +14,11 @@ import { BaseConfig } from "./BaseConfig.js";
 import { Player } from "./maze-objects/Player.js";
 import { MazeObject } from "./maze-objects/MazeObject.js";
 import { Treasure } from "./maze-objects/Treasure.js";
+import { StepStage } from "./constants/step-stage.js";
 
 
 class Maze {
+    static mazeObjectNumber = 0; 
     static MAZE_SIZE = BaseConfig.getInstance().getMazeSize();
     static ARROWS_SIZE = Math.floor(Maze.MAZE_SIZE / 2) * 4;
     static ROTATIONS = BaseConfig.getInstance().getRotations();
@@ -63,10 +65,91 @@ class Maze {
         this.#canvasContext.save();
         this.initMaze(playersConfig, treasuresSources);
         this.#step = 0;
-
+        Maze.mazeObjectNumber++;
         // console.log(this.#rooms.map(i => i.map(j => [j.id, j])));
     }  
 
+    clearMaze() {
+        this.clearSection(0, 0, this.#canvas.width, this.#canvas.height);
+    }
+
+    destroy() {
+        window.removeEventListener('keydown', this.makeCurrentRoomStep);
+        this.#canvas.removeEventListener('click', this.clickEvent);
+
+        this.#players.map(i => i.removeListeners());
+        this.flatRooms.map(i => i.removeListeners());
+        this.#arrows.map(i => i.removeListeners()); 
+
+        this.#currentPlayer.removeListeners();
+        this.#currentRoom.removeListeners();
+
+        this.#currentPlayer = undefined;
+        this.#currentRoom = undefined;
+        delete this;
+    }
+
+    initFromState() {
+
+    } 
+
+    get state() {
+        return ({
+            canvas: this.#canvas,
+            canvasContext:  this.#canvasContext,
+            roomSize: this.#roomSize,
+            currentRoom: this.#currentRoom,
+            currentPlayer: this.#currentPlayer,
+            playerIndex: this.#playerIndex,
+            lastModifiableSection: this.#lastModifiableSection,
+            step: this.#step,
+            treasures: this.#treasures,
+            rooms: this.#rooms,
+            arrows: this.#arrows,
+            players: this.#players,
+            parent: this.#parent
+        });
+    }
+
+    saveState() {
+        localStorage.setItem("maze-game-state", JSON.stringify(this.state));
+    }
+
+    async initState() {
+        const state = JSON.parse(localStorage.getItem("maze-game-state"));
+        this.canvas =  state.canvas;
+        this.canvasContext = state.canvasContext
+        this.roomSize =  state.roomSize
+        this.currentRoom =  state.currentRoom
+        this.currentPlayer =  state.currentPlayer
+        this.playerIndex =  state.playerIndex
+        this.lastModifiableSection =  state.lastModifiableSection
+        this.step = state.step
+        this.treasures =  state.treasures
+        this.rooms =  state.rooms
+        this.arrows =  state.arrows
+        this.players =  state.players
+        this.parent =  state.parent
+
+        await this.initCanvas();
+        this.#rooms.map( async r => await r.draw());
+        await this.#currentRoom().draw();
+        this.#arrows.map(async i => await i.draw());
+
+        this.addkeyboardEventListeners();
+        this.rotateOnClickCurrentRoom();
+
+        this.#players.map(async i => await i.draw());
+        await this.#currentPlayer.draw();
+
+        this.#treasures.map(async i => await i.draw());
+
+        setTimeout(() => {
+            this.#currentPlayer = this.#players[this.#playerIndex];
+            this.#parent.changeCurrentPlayer(this.#currentPlayer);
+        });
+    }
+ 
 
     async initMaze(playersConfig, treasuresSources) {
         await this.initCanvas();
@@ -115,8 +198,6 @@ class Maze {
                 }
             );
         });
-
-        console.log(this.#treasures);
 
         const drawTreasures = this.#treasures.map(t => t.draw());
         await Promise.all(drawTreasures);
@@ -173,7 +254,7 @@ class Maze {
                 rotation = index < 6 ? Rotations.LEFT : Rotations.RIGHT;
             }
 
-            return new ArrowObject(new MazeRoom({
+            return new ArrowObject(new MazeObject({
                 src: '../assets/arrow.svg',
                 position,
                 canvasContext: this.#canvasContext,
@@ -308,6 +389,7 @@ class Maze {
         if (isSameAction) {
             this.#currentRoom.rollbackMove(this.clearSection);
             modifiableSection.map(room => room.rollbackMove(this.clearSection));
+            this.#currentPlayer.stage = StepStage.SLIDE;
             return false;
         }
 
@@ -334,33 +416,40 @@ class Maze {
         return this.transposedRooms[column];
     }
 
-    addkeyboardEventListeners() {
-        window.addEventListener('keydown', e => {
-            const codeAssociation = {
-                'ArrowUp': Direction.TOP,
-                'ArrowDown': Direction.BOTTOM,
-                'ArrowLeft': Direction.LEFT,
-                'ArrowRight': Direction.RIGHT,
+    makeCurrentRoomStep = (e) =>  {
+        console.log('STEP, maze count', Maze.mazeObjectNumber);
+        const codeAssociation = {
+            'ArrowUp': Direction.TOP,
+            'ArrowDown': Direction.BOTTOM,
+            'ArrowLeft': Direction.LEFT,
+            'ArrowRight': Direction.RIGHT,
+        }
+        e.preventDefault();
+        this.#currentRoom.stepMove(codeAssociation[e.code], this.clearSection, this.hasRoomOnPosition).catch(err => {
+            if (err instanceof WrongDirectionException) {}
+            else {
+                console.error(err);
             }
-            e.preventDefault();
-            this.#currentRoom.stepMove(codeAssociation[e.code], this.clearSection, this.hasRoomOnPosition).catch(err => {
-                if (err instanceof WrongDirectionException) {}
-                else {
-                    console.error(err);
-                }
-            }); 
-        })
+        }); 
+    }
+    
+
+    addkeyboardEventListeners() {
+        window.addEventListener('keydown', this.makeCurrentRoomStep);
+        this.#canvas.removeEventListener('click', this.clickEvent);
+    }
+
+    clickEvent = e => {
+        const isClickedX = this.#currentRoom.startPoint.x < e.offsetX && this.#currentRoom.endPoint.x > e.offsetX;
+        const isClickedY = this.#currentRoom.startPoint.y < e.offsetY && this.#currentRoom.endPoint.y > e.offsetY;
+
+        if (isClickedX && isClickedY) {
+            this.#currentRoom.rotate(this.#currentRoom.rotation + Rotations.RIGHT);
+        }
     }
 
     rotateOnClickCurrentRoom() {
-        this.#canvas.addEventListener('click', e => {
-            const isClickedX = this.#currentRoom.startPoint.x < e.offsetX && this.#currentRoom.endPoint.x > e.offsetX;
-            const isClickedY = this.#currentRoom.startPoint.y < e.offsetY && this.#currentRoom.endPoint.y > e.offsetY;
-
-            if (isClickedX && isClickedY) {
-                this.#currentRoom.rotate(this.#currentRoom.rotation + Rotations.RIGHT);
-            }
-        });
+        this.#canvas.addEventListener('click', this.clickEvent);
     }
 
     hasRoomOnPosition = (position) => {

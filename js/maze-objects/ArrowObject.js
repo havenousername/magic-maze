@@ -29,33 +29,38 @@ class ArrowObject extends MazeObjectMovable {
         && distance.y < this.#maze.currentRoom.position.height;
     }
 
+    removeListeners() {
+        this.#maze.canvas.removeEventListener('click', this.clickEvent);
+    }
+
+    clickEvent = e => {
+        const allowEventExecution = BaseConfig
+            .getInstance()
+            .allowEventExecution(
+                e, 
+                this.startPoint, 
+                this.endPoint, 
+                this.hasIntersectActiveRoom() && this.isLocatedCloseToActiveRoom()
+            );
+
+        if (allowEventExecution && this.#maze.currentPlayer.stage === StepStage.SLIDE) {    
+            const associateRotation = {
+                [Rotations.LEFT]: Direction.RIGHT,
+                [Rotations.RIGHT]: Direction.LEFT,
+                [Rotations.BOTTOM]: Direction.BOTTOM,
+                [Rotations.TOP]: Direction.TOP
+            };
+
+            // console.log(associateRotation[this.rotation], this.#arrayPosition);
+            const changed = this.#maze.changeCurrentMove(associateRotation[this.rotation], this.#arrayPosition);
+            if (changed) {
+                this.#maze.currentPlayer.stage = StepStage.MOVE;
+            }
+        }
+    }
 
     activateClickEvent() {
-        this.#maze.canvas.addEventListener('click', e => {
-            const allowEventExecution = BaseConfig
-                .getInstance()
-                .allowEventExecution(
-                    e, 
-                    this.startPoint, 
-                    this.endPoint, 
-                    this.hasIntersectActiveRoom() && this.isLocatedCloseToActiveRoom()
-                );
-
-            if (allowEventExecution && this.#maze.currentPlayer.stage === StepStage.SLIDE) {    
-                const associateRotation = {
-                    [Rotations.LEFT]: Direction.RIGHT,
-                    [Rotations.RIGHT]: Direction.LEFT,
-                    [Rotations.BOTTOM]: Direction.BOTTOM,
-                    [Rotations.TOP]: Direction.TOP
-                };
-
-                // console.log(associateRotation[this.rotation], this.#arrayPosition);
-                const changed = this.#maze.changeCurrentMove(associateRotation[this.rotation], this.#arrayPosition);
-                if (changed) {
-                    this.#maze.currentPlayer.stage = StepStage.MOVE;
-                }
-            }
-        });
+        this.#maze.canvas.addEventListener('click', this.clickEvent);
     }
 
     activateHover() {

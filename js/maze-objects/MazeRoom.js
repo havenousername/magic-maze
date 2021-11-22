@@ -8,6 +8,7 @@ import { MazeObject } from "./MazeObject.js";
 
 
 class MazeRoom extends MazeObject {
+    static UPPER_STEP_LIMIT = 25
     #skelethonePoints;
     #mazeShifter;
     #maze;
@@ -182,12 +183,60 @@ class MazeRoom extends MazeObject {
         })
     }
 
-    calculateValidNeighbours(previousNeighbour = undefined) {
+    static hasInNeighbouirs(neighbours, neighbour) {
+        return neighbours.find(n => n.id === neighbour.id);
+    }
+
+    calculateSteppableNeighbours() {
+        return [...new Set(this.calculateValidNeighbours())];
+    }
+
+    calculateValidNeighbours(previousNeighbour = undefined, depth = 0) {
+        // return this.calculateValidNeighboursStrategyOne(previousNeighbour);
+        return this.calculateValidNeighboursStrategyOne(previousNeighbour, depth);
+    }
+    
+    calculateValidNeighbours1(previousNeighbour = undefined, depth = 0) {
+        return this.calculateValidNeighboursStrategyTwo(previousNeighbour, depth);
+    }
+
+    calculateValidNeighboursStrategyTwo(prevNeighboursIds = [], depth = 0) {
         this.#initSketethonePoints();
         let availableNeighbours = [];
 
+        if (depth > 20) {
+            return;
+        }
+
+        debugger;
+        const neighbours = this.getNeighbours();
+        for (const neighbour of neighbours) {
+            const interactionPoint = this.skelethone.find(point => neighbour.skelethone.find(neighbourPoint => neighbourPoint.isEqual(point)));
+            const isApproved = interactionPoint && (!prevNeighboursIds.find(i => i === this.id));
+            if (isApproved) {
+                availableNeighbours.push(neighbour);
+            }
+        }
+
+        prevNeighboursIds.push(this.id);
+        for (const neighbour of availableNeighbours) {
+            availableNeighbours = [...availableNeighbours, ...neighbour.calculateValidNeighbours1(prevNeighboursIds, depth++)];
+        }
+
+        return availableNeighbours;
+    }
+
+    calculateValidNeighboursStrategyOne(previousNeighbour, depth) {
+        this.#initSketethonePoints();
+        let availableNeighbours = [];
+
+        if (depth > MazeRoom.UPPER_STEP_LIMIT) {
+            return [];
+        }
+
         
-        for (const neighbour of this.getNeighbours()) {
+        const neighbours = this.getNeighbours();
+        for (const neighbour of neighbours) {
             const interactionPoint = this.skelethone.find(point => neighbour.skelethone.find(neighbourPoint => neighbourPoint.isEqual(point)));
             if (interactionPoint && (!previousNeighbour || previousNeighbour.id !== neighbour.id)) {
                 availableNeighbours.push(neighbour);
@@ -195,46 +244,53 @@ class MazeRoom extends MazeObject {
         }
 
         for (const neighbour of availableNeighbours) {
-            availableNeighbours = [...availableNeighbours, ...neighbour.calculateValidNeighbours(this)];
+            availableNeighbours = [...availableNeighbours, ...neighbour.calculateValidNeighbours(this, ++depth)]
         }
 
         return availableNeighbours;
     }
 
-    addClickListener() {
-        document.addEventListener('click', e => {
-            const allowEventExecution = BaseConfig
+    clickEvent = e => {
+        const allowEventExecution = BaseConfig
+            .getInstance()
+            .allowEventExecution(
+                e, 
+                this.startPoint, 
+                this.endPoint
+            );
+        
+        if (allowEventExecution) {
+            const currentPlayer = this.#maze.currentPlayer;
+            // console.log(currentPlayer);
+            if (!currentPlayer || currentPlayer.stage === StepStage.SLIDE || !currentPlayer.active) {
+                return;
+            }
+
+            if (currentPlayer.isRoomSteppable(this)) {
+                const eventInsidePlayer = BaseConfig
                 .getInstance()
                 .allowEventExecution(
                     e, 
-                    this.startPoint, 
-                    this.endPoint
+                    currentPlayer.startPoint, 
+                    currentPlayer.endPoint
                 );
-            
-            if (allowEventExecution) {
-                const currentPlayer = this.#maze.currentPlayer;
-                if (currentPlayer.stage === StepStage.SLIDE || !currentPlayer.active) {
+                if (eventInsidePlayer) {
                     return;
                 }
-
-                if (currentPlayer.isRoomSteppable(this)) {
-                    const eventInsidePlayer = BaseConfig
-                    .getInstance()
-                    .allowEventExecution(
-                        e, 
-                        currentPlayer.startPoint, 
-                        currentPlayer.endPoint
-                    );
-                    if (eventInsidePlayer) {
-                        return;
-                    }
-                    currentPlayer.changeRoom(this);
-                    this.#maze.currentPlayer = this.#maze.nextPlayer;
-                }
+                currentPlayer.changeRoom(this);
+                this.#maze.currentPlayer = this.#maze.nextPlayer;
             }
-        })
+        }
     }
 
+    addClickListener() {
+        document.addEventListener('click', this.clickEvent);
+    }
+
+    removeListeners() {
+        document.removeEventListener('click', this.clickEvent);
+    }
+ 
     get skelethone() {
         return this.#skelethonePoints;
     } 

@@ -43,34 +43,39 @@ class Player extends MazeObjectMovable {
         await super.draw();
     }
 
+    clickEvent = async e => {
+        const allowEventExecution = BaseConfig
+            .getInstance()
+            .allowEventExecution(
+                e, 
+                this.startPoint, 
+                this.endPoint
+            );
+        if (allowEventExecution && this.#maze.currentPlayer.id === this.id && this.#stage === StepStage.MOVE) {
+            this.#active = !this.#active;
+
+            if (this.#active) {
+                const neighbours = this.#room.calculateSteppableNeighbours();
+                this.#steppableRooms = neighbours;
+                [...neighbours].map(async neighbour => {
+                    await this.#onActiveChangeSrc(neighbour);
+                });
+                this.#previousSrc = this.#room.src;
+                this.#room.src =  './../assets/selected/' + this.#roomSrc + '.svg';
+            } else {
+                this.applyPreviousSources();
+                this.#room.src =  './../assets/' + this.#roomSrc + '.svg';
+            }   
+            await this.#room.draw();
+        }
+    }
+
+    removeListeners() {
+        this.#canvas.removeEventListener('click', this.clickEvent);
+    } 
 
     activateClickListener() {
-        this.#canvas.addEventListener('click', async e => {
-            const allowEventExecution = BaseConfig
-                .getInstance()
-                .allowEventExecution(
-                    e, 
-                    this.startPoint, 
-                    this.endPoint
-                );
-            if (allowEventExecution && this.#maze.currentPlayer.id === this.id && this.#stage === StepStage.MOVE) {
-                this.#active = !this.#active;
-
-                if (this.#active) {
-                    const neighbours = this.#room.calculateValidNeighbours();
-                    this.#steppableRooms = neighbours;
-                    [...neighbours].map(async neighbour => {
-                        await this.#onActiveChangeSrc(neighbour);
-                    });
-                    this.#previousSrc = this.#room.src;
-                    this.#room.src =  './../assets/selected/' + this.#roomSrc + '.svg';
-                } else {
-                    this.applyPreviousSources();
-                    this.#room.src =  './../assets/' + this.#roomSrc + '.svg';
-                }   
-                await this.#room.draw();
-            }
-        });
+        this.#canvas.addEventListener('click', this.clickEvent);
     } 
 
     async applyPreviousSources() {

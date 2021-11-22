@@ -7,6 +7,8 @@ class ConfigureGamePage extends Page {
     #htmlIds;
 
     #playersNumber;
+    #treasureNumber;
+    #treasures;
     #players;
 
     constructor(game, htmlIds) {
@@ -15,6 +17,7 @@ class ConfigureGamePage extends Page {
         this.#htmlIds = htmlIds ?? {
             wrapper: "configure-game",
             inputNumberOfPlayers: "number-of-players",
+            inputNumberOfTreasures: "number-of-treasures",
             inputPlayer: "input-player",
             startGame: "configure-game-start-game",
             inputWrapper: "configure-input-wrapper",
@@ -23,6 +26,7 @@ class ConfigureGamePage extends Page {
         };
 
         this.#playersNumber = 2;
+        this.#treasureNumber = 1;
         this.#players = ["king", "witch", "knight", "prince"]
         .map(i => ({ name: i,  src: `./assets/${i}.svg`, value: '' }));
 
@@ -40,7 +44,7 @@ class ConfigureGamePage extends Page {
                 <input 
                     id=${player.name} 
                     value="${player.value}" 
-                    class="cfg-input input-min-w bg-transparent border-primary border-4 pl-11 py-2 pr-2" 
+                    class="cfg-input bg-primary input-min-w bg-transparent border-primary border-4 pl-11 py-2 pr-2" 
                     placeholder="Please input ${player.name} name"
                 /> 
                 <img src="${player.src}" alt="${player.name}" width="19" class="absolute top-9 left-5" />
@@ -67,6 +71,7 @@ class ConfigureGamePage extends Page {
         const assocString = {
             header: "Choose Players",
             inputPlayersLabel: "Number of players",
+            inputTreasuresLabel: "Number of treasures per player",
             startGameBtn: "Start game"
         }; 
 
@@ -76,11 +81,15 @@ class ConfigureGamePage extends Page {
                     <img alt="goback" src="./assets/go-back-arrow.svg" width="30" />
                 </div>
                 <div class="${modalClass}">
-                    <h1 class="text-4xl mt-9 mb-3">${assocString.header}</h1>
+                    <h1 class="text-4xl mt-9 mb-3 p-2 bg-primary rounded">${assocString.header}</h1>
                     <div class="mt-6">
-                        <div class="flex flex-col font-bold">
+                        <div class="flex flex-col font-bold ">
                             <span class="inline-block">${assocString.inputPlayersLabel}</span>
-                            <input value="${this.#playersNumber}" id=${this.#htmlIds.inputNumberOfPlayers} type="number" min="2" max="4" class="cfg-input pl-5 p-2 bg-transparent border-primary border-4" /> 
+                            <input value="${this.#playersNumber}" id=${this.#htmlIds.inputNumberOfPlayers} type="number" min="2" max="4" class="cfg-input bg-primary pl-5 p-2 bg-transparent border-primary border-4" /> 
+                        </div>
+                        <div class="flex flex-col font-bold">
+                            <span class="inline-block">${assocString.inputTreasuresLabel}</span>
+                            <input value="${this.#treasureNumber}" id="${this.#htmlIds.inputNumberOfTreasures}" type="number" min="1" max="6" class="cfg-input bg-primary pl-5 p-2 bg-transparent border-primary border-4" /> 
                         </div>
                         <div id="${this.#htmlIds.inputWrapper}" class="flex flex-wrap justify-between">
                         </div>
@@ -118,6 +127,11 @@ class ConfigureGamePage extends Page {
         document.getElementById(this.#htmlIds.goBackBtn).addEventListener('click', () => {
             document.getElementById(this.#htmlIds.wrapper).classList.add('hidden');
             this.#game.stage = GameStage.MENU;
+        });
+
+        document.getElementById(this.#htmlIds.inputNumberOfTreasures).addEventListener('input', e => {
+            this.#treasureNumber  = +e.target.value;
+            this.#game.treasures = this.#playersNumber * this.#treasureNumber;
         });
     }
 
