@@ -91,6 +91,7 @@ class Player extends MazeObjectMovable {
     async #onActiveChangeSrc(room) {
         this.#prevSources.push({ id: room.id, src: room.src });
         room.src = BaseConfig.getInstance().getCurrentPath() + './assets/steppable/' + BaseConfig.getInstance().parseNameFromSource(room.src) + '.svg';
+        console.log(room.src);
         await room.draw();
     }
 
