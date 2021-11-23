@@ -1,5 +1,6 @@
 import { Page } from "./Page.js";
 import { GameStage } from "../constants/game-stage.js";
+import { BaseConfig } from "../BaseConfig.js";
 
 class InstructionsPage extends Page {
     #game;
@@ -28,7 +29,7 @@ class InstructionsPage extends Page {
                 <div class="${absoluteModalClass}"></div>
                 <div class="${modalClass}">
                     <div id="${this.#htmlIds.goBackBtn}" class="absolute cursor-pointer left-11">
-                        <img alt="goback" src="./assets/go-back-arrow.svg" width="30" />
+                        <img alt="goback" src="${BaseConfig.getInstance().getCurrentPath()}/assets/go-back-arrow.svg" width="30" />
                     </div>
                     <div class="flex justify-center mb-20">
                         <h1 class="text-4xl inline text-center font-bold border-b-4 border-primary">${modalStrings.header}</h1> 

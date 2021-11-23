@@ -255,7 +255,7 @@ class Maze {
             }
 
             return new ArrowObject(new MazeObject({
-                src: '../assets/arrow.svg',
+                src: BaseConfig.getInstance().getCurrentPath() + '/assets/arrow.svg',
                 position,
                 canvasContext: this.#canvasContext,
                 rotation: rotation

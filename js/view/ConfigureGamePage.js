@@ -28,7 +28,7 @@ class ConfigureGamePage extends Page {
         this.#playersNumber = 2;
         this.#treasureNumber = 1;
         this.#players = ["king", "witch", "knight", "prince"]
-        .map(i => ({ name: i,  src: `./assets/${i}.svg`, value: '' }));
+        .map(i => ({ name: i,  src: `${BaseConfig.getInstance().getCurrentPath()}/assets/${i}.svg`, value: '' }));
 
         this.generateScreen();
     }
@@ -78,7 +78,7 @@ class ConfigureGamePage extends Page {
         const elementText = `
             <div id="${this.#htmlIds.wrapper}" class="${wrapperClass}">
                 <div id="${this.#htmlIds.goBackBtn}" class="absolute cursor-pointer left-11 top-11">
-                    <img alt="goback" src="./assets/go-back-arrow.svg" width="30" />
+                    <img alt="goback" src="${BaseConfig.getInstance().getCurrentPath()}/assets/go-back-arrow.svg" width="30" />
                 </div>
                 <div class="${modalClass}">
                     <h1 class="text-4xl mt-9 mb-3 p-2 bg-primary rounded">${assocString.header}</h1>

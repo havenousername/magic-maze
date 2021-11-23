@@ -4,7 +4,7 @@ import { Maze } from "../Maze.js";
 import { BaseConfig } from "../BaseConfig.js";
 
 class GameLoopPage extends Page {
-    static startMarkertSrc = './assets/route-start.svg';
+    static startMarkertSrc = `${BaseConfig.getInstance().getCurrentPath()}/assets/route-start.svg`;
     
     #parentId
     #game;
@@ -102,7 +102,7 @@ class GameLoopPage extends Page {
             <div id="${this.#htmlIds.wrapper}" class="w-full pt-4 bg-red flex justify-between">
                 <div class="flex flex-grow">
                     <div id="${this.#htmlIds.goBackBtn}" class="z-10 cursor-pointer flex items-center ml-11 mr-8">
-                        <img alt="goback" src="./assets/go-back-arrow.svg" width="30" />
+                        <img alt="goback" src="${BaseConfig.getInstance().getCurrentPath()}/assets/go-back-arrow.svg" width="30" />
                     </div>
                     <div class="flex flex-col mr-8 z-10">
                         <h5 class="text-xl text-white">time</h5>

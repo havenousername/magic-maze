@@ -61,10 +61,10 @@ class Player extends MazeObjectMovable {
                     await this.#onActiveChangeSrc(neighbour);
                 });
                 this.#previousSrc = this.#room.src;
-                this.#room.src =  './../assets/selected/' + this.#roomSrc + '.svg';
+                this.#room.src =  BaseConfig.getInstance().getCurrentPath() + './../assets/selected/' + this.#roomSrc + '.svg';
             } else {
                 this.applyPreviousSources();
-                this.#room.src =  './../assets/' + this.#roomSrc + '.svg';
+                this.#room.src = BaseConfig.getInstance().getCurrentPath() +  './../assets/' + this.#roomSrc + '.svg';
             }   
             await this.#room.draw();
         }
@@ -90,7 +90,7 @@ class Player extends MazeObjectMovable {
 
     async #onActiveChangeSrc(room) {
         this.#prevSources.push({ id: room.id, src: room.src });
-        room.src = './../assets/steppable/' + BaseConfig.getInstance().parseNameFromSource(room.src) + '.svg';
+        room.src =  BaseConfig.getInstance().getCurrentPath() + './../assets/steppable/' + BaseConfig.getInstance().parseNameFromSource(room.src) + '.svg';
         await room.draw();
     }
 
@@ -143,7 +143,7 @@ class Player extends MazeObjectMovable {
         if (room.id === this.#startRoomId && this.completedTreasures) {
             this.#finished = true;
         }
-        this.#room.src = './../assets/' + this.#roomSrc + '.svg';
+        this.#room.src = BaseConfig.getInstance().getCurrentPath() + './../assets/' + this.#roomSrc + '.svg';
         this.#room.removePlayer(this.id);
         this.applyPreviousSources();
         this.room.draw();

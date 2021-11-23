@@ -15,7 +15,7 @@ class StatisticsPage extends Page {
             statsWrapper: 'statistics-stats',
         };
         this.#statistics = ["king", "witch", "knight", "prince"]
-        .map((i, ind) => ({ name: i,  src: `./assets/${i}.svg`, place: ind + 1, time: '1.45 minutes' }))
+        .map((i, ind) => ({ name: i,  src: `${BaseConfig.getInstance().getCurrentPath()}/assets/${i}.svg`, place: ind + 1, time: '1.45 minutes' }))
         this.generateScreen();
     }
 
@@ -42,7 +42,7 @@ class StatisticsPage extends Page {
                 <div class="${absoluteModalClass}"></div>
                 <div class="${modalClass}">
                     <div id="${this.#htmlIds.goBackBtn}" class="absolute cursor-pointer left-11">
-                        <img alt="goback" src="./assets/go-back-arrow.svg" width="30" />
+                        <img alt="goback" src="${BaseConfig.getInstance().getCurrentPath()}/assets/go-back-arrow.svg" width="30" />
                     </div>
                     <div class="flex justify-center mb-20">
                         <h1 class="text-4xl inline text-center font-bold border-b-4 border-primary">${modalStrings.header}</h1> 

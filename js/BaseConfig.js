@@ -8,9 +8,17 @@ const BaseConfig = (function() {
             return instance;
         }
 
+        const getCurrentPath = () => {
+            if (location.pathname.includes('.html')) {
+                return '';
+            }
+
+            return location.pathname;
+        }
+
         // private methods and variables
 
-        let srcImages = ['../assets/room.svg', '../assets/bend-room.svg', '../assets/t-room.svg'];
+        let srcImages = [ getCurrentPath() + '/assets/room.svg', getCurrentPath() + '/assets/bend-room.svg', getCurrentPath() + '/assets/t-room.svg'];
         const treasuresSrc = [
             "ball.svg",
             "bomb.svg",
@@ -36,7 +44,7 @@ const BaseConfig = (function() {
             "ufo.svg",
             "vr.svg",
             "wizard.svg"
-        ].map(treasure => `../assets/treasures/${treasure}`);
+        ].map(treasure => `${getCurrentPath()}/assets/treasures/${treasure}`);
 
 
         const STATISTICS_STORAGE = 'maze-game-statisctics'
@@ -74,7 +82,7 @@ const BaseConfig = (function() {
 
         let rotations = [Rotations.BOTTOM, Rotations.RIGHT, Rotations.TOP, Rotations.LEFT];
 
-        const createImagePath = (src) => '../assets/' + src + '.svg'; 
+        const createImagePath = (src) => getCurrentPath() + '/assets/' + src + '.svg'; 
 
         function createElementFromString(str) {
             const element = new DOMParser().parseFromString(str, 'text/html');
@@ -158,6 +166,9 @@ const BaseConfig = (function() {
             },
             getStatisticsLocalstorageName() {
                 return STATISTICS_STORAGE;
+            },
+            getCurrentPath() {
+                return getCurrentPath();
             }
         }
     }
