@@ -149,6 +149,7 @@ const BaseConfig = (function() {
                 return isClickedX && isClickedY && condition;
             },
             parseNameFromSource(src) {
+                
                 return src.split('assets/')[1].split('.')[0];
             },
             takeSelectedSrc(src) {
